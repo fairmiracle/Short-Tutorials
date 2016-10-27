@@ -2,7 +2,7 @@
 title: "Foundations of Spectral Clustering"
 author: "Dong Li"
 date: "27 October 2016"
-output: md_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -10,13 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Motivation
-Recently we read a Nature [paper](http://science.sciencemag.org/content/353/6295/163) which adopts spectral clustering as the main method to find higher-order connectivity patterns. The efficiency and scalabilty of their algorithm are impressive. And We also found that the best player in this year's [Disease Module Identification DREAM Challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) uses spectral clustering as one of their main techinques to identify modules, which achieved the best overall performance at all FDR levels. Check their write-up: [A Double Spectral Approach to DREAM 11 Subchallenge 3](https://www.synapse.org/#!Synapse:syn7349492/wiki/407359).
+Recently we read a Nature [paper](http://science.sciencemag.org/content/353/6295/163) which adopts spectral clustering as the main method to find higher-order connectivity patterns. The efficiency and scalability of their algorithm are impressive. And We also found that the best player in this year's [Disease Module Identification DREAM Challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) uses spectral clustering as one of their main techniques to identify modules, which achieved the best overall performance at all FDR levels. Check their write-up: [A Double Spectral Approach to DREAM 11 Subchallenge 3](https://www.synapse.org/#!Synapse:syn7349492/wiki/407359).
 
 As a classical clustering method, spectral techniques are still promising. The basic questions remain as: what is spectral clustering and why it works?
 
 ## A starter dish about clustering
 
-Before we step into spectral clustering, let's look at a simple example about clustering. Image we have a collection of two-dimentional data points looks like,
+Before we step into spectral clustering, let's look at a simple example about clustering. Image we have a collection of two-dimensional data points looks like,
 ```{r, echo=T}
 library(mlbench)
 n = 100
@@ -35,10 +35,10 @@ But how can we make the program know? We may need classical [K-means algorithm](
 
 - 1) randomly picking $k$ nodes as centroids, 
 - 2) assign each data points to the centroids which is the most "close", 
-- 3) calculated the new centroids based on previous assigment and 
+- 3) calculated the new centroids based on previous assignment and 
 - 4) repeat 2-3 until the centroids keep unchanged. 
 
-Code for 2) Assigment and 3) Update centroids:
+Code for 2) Assignment and 3) Update centroids:
 
 ```{r, echo=TRUE}
 # Assign cluster labels given centroidids
@@ -112,11 +112,11 @@ title('Kmeans result')
 We will see spectral clustering can work well here.
 
 ## Spectral clustering algorithms
-[Spectral clustering](https://en.wikipedia.org/wiki/Spectral_clustering) makes use of spectrum(eigenvalues) of the similarity matrix to perform data analysis. One simple form of the algorithim goes like
+[Spectral clustering](https://en.wikipedia.org/wiki/Spectral_clustering) makes use of spectrum(eigenvalues) of the similarity matrix to perform data analysis. One simple form of the algorithm goes like
 
-- Make the affinity matrix A based on the similarity matrix $w_{ij}=exp(-\|s_i-s_j\|^2/2\sigma^2)$ for $i\neq j$.
-- Make the diagonal matrix $D$ where $D_{ii}=\sum_jA_{ij}$, and the unnormalized Laplasian matrix $L=D-A$ or normalized Laplasian matrix $L=D^{-1/2}AD^{-1/2}$.
-- Find the first k eigenvectors $x_1,x_2,...x_k$ of L and form the new matrix $X=[x_1x_2...x_k]\inR^{n\times k}$.
+- Make the affinity matrix $A$ based on the similarity matrix $w_{ij}=exp(-\|s_i-s_j\|^2/2\sigma^2)$ for $i\neq j$.
+- Make the diagonal matrix $D$ where $D_{ii}=\sum_jA_{ij}$, and the unnormalized Laplacian matrix $L=D-A$ or normalized Laplacian matrix $L=D^{-1/2}AD^{-1/2}$.
+- Find the first k eigenvectors $x_1,x_2,...x_k$ of L and form the new matrix $X=[x_1x_2...x_k]\in \mathbb{R}^{n\times k}$.
 - Conduct K-means on X.
 
 Note that the affinity matrix is not always the similarity matrix W. For some problem we need to consider the local neighborhood relationships. k-nearest neighboor filter is a common choice:
@@ -129,6 +129,8 @@ S <- matrix(rep(NA,n^2), ncol=n)
       S[i,j] <- exp(- alpha * norm(as.matrix(dat2$x[i,]-dat2$x[j,]), type="F"))
     }
 }
+
+#k-nearest neighorhood to filter affinity
 make.affinity <- function(S, n.neighboors=3) {
   N <- length(S[,1])
   if (n.neighboors >= N) {  # fully connected
@@ -137,9 +139,8 @@ make.affinity <- function(S, n.neighboors=3) {
     A <- matrix(rep(0,N^2), ncol=N)
     for(i in 1:N) { # for each line
       # only connect to those points with larger similarity 
-      best.similarities <- sort(S[i,], decreasing=TRUE)[1:n.neighboors]
-      for (s in best.similarities) {
-        j <- which(S[i,] == s)
+      best.similarities <- sort(S[i,], decreasing=TRUE,index.return = TRUE)
+      for (j in best.similarities$ix[1:n.neighboors]) {
         A[i,j] <- S[i,j]
         A[j,i] <- S[i,j] # to make an undirected graph, ie, the matrix becomes symmetric
       }
@@ -147,18 +148,17 @@ make.affinity <- function(S, n.neighboors=3) {
   }
   A  
 }
-```
-The real code for spectral clustering is quite simple:
-```
+
+##The real code for spectral clustering is quite simple:
 A <- make.affinity(S)
 d <- apply(A, 1, sum)
-L <- diag(d)-A
-#L <- diag(d^-0.5)%*%A%*% diag(d^0.5) # normalized version
+L <- diag(d)-A                       # unnormalized version
+#L <- diag(d^-0.5)%*%A%*% diag(d^-0.5) # normalized version
 evL <- eigen(L,symmetric=TRUE)	# evL$values is decreasing sorted when symmetric=TRUE
 # pick the first k first k eigenvectors (corresponding k smallest) as data points in spectral space
 Z <- evL$vectors[,(ncol(evL$vectors)-k+1):ncol(evL$vectors)]
 spc <- kmeans(Z, centers=k)
-plot(dat2$x, col=skm$spc)
+plot(dat2$x, col=spc$cluster)
 title('Spectral clustering result')
 ```
 
@@ -172,11 +172,11 @@ title('Spectral clustering result by kernlab')
 ```
 
 ## Why spectral clustering works?
-At the first sight you may feel amazing. Why it works? Why we pick exactly $k$ eigenvectors and why they are separable under this representation? Following the logic of [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf), the principle of explaining why Eigendecomposition can be used to do clustering is to **establish an equivalence between Eigendecomposition based procedure and clustering data points**. We only explore it from the Graph cut perspective.
+At the first sight you may feel amazing. Why it works? Why we pick exactly $k$ eigenvectors and why they are separable under this representation? Following the logic of [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf), the principle of explaining why Eigendecomposition can be used to do clustering is to **establish an equivalence between Eigendecomposition based procedure and clustering data points**. We only explore it from the Graph cut perspective based on normalized Laplacian.
 
-The essence of clustering is to seperate data points based on their similarities. Given the similarity graph (where nodes are data points and edges are similarities) of these points, it aims to find a partition that edges within the same cluster are dence and between different clusters are sparse. This problem has been intensively studied in graph theory.
+The essence of clustering is to separate data points based on their similarities. Given the similarity graph (where nodes are data points and edges are similarities) of these points, it aims to find a partition that edges within the same cluster are dense and between different clusters are sparse. This problem has been intensively studied in graph theory.
 
-Check [Cut](https://en.wikipedia.org/wiki/Cut_%28graph_theory%29) to disguish similar concepts of cut, cut-set and Minimum cut. Given the adjacency matrix $W$ of a graph $G=(V,E)$, we define the following metric for two disjoint subsets $A,B\in V$:
+Check [Cut](https://en.wikipedia.org/wiki/Cut_%28graph_theory%29) to distinguish similar concepts of cut, cut-set and Minimum cut. Given the adjacency matrix $W$ of a graph $G=(V,E)$, we define the following metric for two disjoint subsets $A,B\in V$:
 $$cut(A,B)=\sum_{i\in A,j\in B}w_{ij}$$
 and $\bar{A}$ as the [complement](https://en.wikipedia.org/wiki/Complement_%28set_theory%29) of $A$. For given $k$ clusters, we want to find a partition $A_1,A_2,...A_k$ that minimizes
 $$Cut(A_1,A_2,...A_k)=\frac{1}{2}\sum_{i=1}^kcut(A_i,\bar{A_i})$$.
@@ -184,7 +184,7 @@ But simply minizing this metric would lead to large clusters. Several improvemen
 $$Ncut(A,B)=\sum_{i=1}^k\frac{cut(A_i,\bar{A_i})}{vol(A_i)}$$
 where $vol(A)=\sum_{i\in A,j}w_{i,j}=\sum_{i\in A}d_i$ and $d_i$ is the connectivity (degree) of $i$.
 
-Next we want to derive normalized spectral clustering as relaxtion of minizing Ncut. Considering the simplest canse When $k=2$, there are only $A$ and $\bar{A}$, we define the cluster indicator $f$ (this is the key idea) as
+Next we want to derive normalized spectral clustering as relaxation of minimizing Ncut. Considering the simplest case When $k=2$, there are only $A$ and $\bar{A}$, we define the cluster indicator $f$ (this is the key idea) as
 $$f_i=\left\{
                 \begin{array}{ll}
                   \sqrt{\frac{vol(\bar{A})}{vol(A)}}&if\quad v_i\in A\\
@@ -207,15 +207,19 @@ For every $f$ we have $f'Lf=1/2\sum_{ij}(f_i-f_j)^2$, and for the specific $f$ d
 $$\begin{array}{ll}
 f'Lf=\frac{1}{2}\sum_{i\in A,j\in \bar{A}}w_{ij}\Big(\sqrt{\frac{vol(\bar{A})}{vol(A)}}+\sqrt{\frac{vol(A)}{vol(\bar{A})}}\Big)^2+
 \frac{1}{2}\sum_{i\in \bar{A},j\in A}w_{ij}\Big(-\sqrt{\frac{vol(A)}{vol(\bar{A})}}-\sqrt{\frac{vol(\bar{A})}{vol(A)}}\Big)^2\\
-=(cut(A,\bar{A})\Big(\frac{vol(A)}{vol(\bar{A})}+\frac{vol(\bar{A})}{vol(A)}+2\Big)\\
+=cut(A,\bar{A})\Big(\frac{vol(A)}{vol(\bar{A})}+\frac{vol(\bar{A})}{vol(A)}+2\Big)\\
 =cut(A,\bar{A})\Big(\frac{vol(A)+vol(\bar{A})}{vol(\bar{A})}+\frac{vol(\bar{A})+vol(A)}{vol(A)}+2\Big)\\
 =vol(V)Ncut(A,\bar{A})
 \end{array}$$
 
-Because $vol(V)$ is constant for given graph, the equivalence problem of minimize Ncut is to minimize $f'Lf$ w.r.t $f$. Unfortunately it is a discrete optimization problme.
+Because $vol(V)$ is constant for given graph, the equivalence problem of minimize Ncut is to minimize $f'Lf$ w.r.t $f$. Unfortunately it is a discrete optimization problem.
 
 If we relax the vector $f$ to real number space we have the following optimization problem
 $$\min_{f\in \mathbb{R}^n} f'Lf\quad s.t.\quad f^TD\perp\mathbb{1},f'Df=vol(V)$$
+
+Furthermore we make $g=D^{1/2}f$, the problem becomes
+$$\min_{g\in \mathbb{R}^n} g'L_{sym}g\quad s.t.\quad g\perp D^{1/2}\mathbb{1},\|g\|^2=vol(V)$$
+where $L_{sym}=D^{-1/2}LD^{-1/2}$. According to [Rayleigh quotient](https://en.wikipedia.org/wiki/Rayleigh_quotient), the solution is given by the second eigenvector of $L_{sym}$. That means as long as we get $f$ by eigenvector of $L_{sym}$, we get a partition which make minimize Ncut thus get the clusters. Refer to [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf) when $k>2$.
 
 ## References
 This document is written in R Markdown. Want to write one like this? See [Writing reproducible reports in R ](https://nicercode.github.io/guides/reports/). 
