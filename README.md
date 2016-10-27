@@ -4,4 +4,4 @@ A series of short tutorials given by me at our group meeting in School of Comput
 # Current contents
 ## Network Inference
 ## Modules Identification
-## Spectral Clustering
+## [Spectral Clustering](https://github.com/fairmiracle/Short-Tutorials/blob/master/Spectral/spectr.html)
