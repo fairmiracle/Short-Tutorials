@@ -2,7 +2,7 @@
 title: "Foundations of Spectral Clustering"
 author: "Dong Li"
 date: "27 October 2016"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
