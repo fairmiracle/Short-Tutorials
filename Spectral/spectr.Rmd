@@ -25,7 +25,7 @@ dat1 = mlbench.2dnormals(n, cl=k, r=sqrt(k), sd=0.7)
 plot(dat1$x,col=rep(1,n))
 ```
 
-How many clusters are their? It is easy for human to say
+How many clusters are there? It is easy for human to say
 
 ```{r, echo=T}
 plot(dat1$x,col=dat1$classes)
