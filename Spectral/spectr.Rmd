@@ -1,8 +1,9 @@
 ---
 title: "Foundations of Spectral Clustering"
 author: "Dong Li"
-date: "27 October 2016"
-output: pdf_document
+#date: "27 October 2016"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -10,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Motivation
-Recently we read a Nature [paper](http://science.sciencemag.org/content/353/6295/163) which adopts spectral clustering as the main method to find higher-order connectivity patterns. The efficiency and scalability of their algorithm are impressive. And We also found that the best player in this year's [Disease Module Identification DREAM Challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) uses spectral clustering as one of their main techniques to identify modules, which achieved the best overall performance at all FDR levels. Check their write-up: [A Double Spectral Approach to DREAM 11 Subchallenge 3](https://www.synapse.org/#!Synapse:syn7349492/wiki/407359).
+Recently we read a [Nature paper](http://science.sciencemag.org/content/353/6295/163) which adopts spectral clustering as the main method to find higher-order connectivity patterns. The efficiency and scalability of their algorithm are impressive. And We also found that the best player in this year's [Disease Module Identification DREAM Challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) uses spectral clustering as one of their main techniques to identify modules, which achieved the best overall performance at all FDR levels. Check their write-up: [A Double Spectral Approach to DREAM 11 Subchallenge 3](https://www.synapse.org/#!Synapse:syn7349492/wiki/407359).
 
-As a classical clustering method, spectral techniques are still promising. The basic questions remain as: what is spectral clustering and why it works?
+As a classical clustering method, spectral techniques are still promising. For many people including me, the basic questions remain as: what is spectral clustering and why it works?
 
 ## A starter dish about clustering
 
@@ -25,7 +26,7 @@ dat1 = mlbench.2dnormals(n, cl=k, r=sqrt(k), sd=0.7)
 plot(dat1$x,col=rep(1,n))
 ```
 
-How many clusters are there? It is easy for human to say
+How many clusters are there? It is easy for human to say there are roughly two clusters:
 
 ```{r, echo=T}
 plot(dat1$x,col=dat1$classes)
@@ -95,6 +96,8 @@ for(i in 3:4){
 }
 ```
 
+Kmeans algorithm is also a special form of more general model [expectation–maximization (EM) algorithm](https://en.wikipedia.org/wiki/Expectation%E2%80%93maximization_algorithm), where the E-step is the $\texttt{Assigment}$ procedure and M-step is $\texttt{Update}$ procedure. 
+
 But when the data points are not so straightforward (linearly separable), such as spirals, where k-means may fail:
 
 ```{r, echo=TRUE}
@@ -116,17 +119,17 @@ We will see spectral clustering can work well here.
 
 - Make the affinity matrix $A$ based on the similarity matrix $W$.
 - Make the diagonal matrix $D$ where $D_{ii}=\sum_jA_{ij}$, and the unnormalized Laplacian matrix $L=D-A$ or normalized Laplacian matrix $L=D^{-1/2}AD^{-1/2}$.
-- Find the first k eigenvectors $x_1,x_2,...x_k$ of L and form the new matrix $X=[x_1x_2...x_k]\in \mathbb{R}^{n\times k}$.
+- Find the first k eigenvectors $x_1,x_2,...x_k$ of $L$ and form the new matrix $X=[x_1x_2...x_k]\in \mathbb{R}^{n\times k}$.
 - Conduct K-means on X.
 
-Note that the affinity matrix is not always the similarity matrix W. For some problem we need to consider the local neighborhood relationships. k-nearest neighboor filter is a common choice:
+Note that the affinity matrix is not always the similarity matrix $W$. For some problem we need to consider the local neighborhood relationships. k-nearest neighboor filter is a common choice:
 
-```{r, echo=FALSE}
-alpha = 1
+```{r, echo=TRUE}
+#Similarity matrix is defined by Gaussian Kernel distance
 S <- matrix(rep(NA,n^2), ncol=n)
   for(i in 1:n) {
     for(j in 1:n) {
-      S[i,j] <- exp(- alpha * norm(as.matrix(dat2$x[i,]-dat2$x[j,]), type="F"))
+      S[i,j] <- exp(- 1 * norm(as.matrix(dat2$x[i,]-dat2$x[j,]), type="F"))
     }
 }
 
@@ -171,16 +174,25 @@ plot(dat2$x, col=skm)
 title('Spectral clustering result by kernlab')
 ```
 
+Probably you have noticed that the matrix $Z\in \mathbb{R}^{n\times k}$ we really perform Kmeans clustering on can be viewed as another useful representation of original dataset $X\in \mathbb{R}^{n\times d}$. For some applications such as document classification/clustering $d>>k$, thus spectral help to do dimensionality reduction. What is more, data points become linearly separable in this so called spectral space.
+
+```{r}
+library(kernlab)
+plot(Z)
+title('Data points in spectral space')
+```
+
 ## Why spectral clustering works?
-At the first sight you may feel amazing. Why it works? Why we pick exactly $k$ eigenvectors and why they are separable under this representation? Following the logic of [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf), the principle of explaining why Eigendecomposition can be used to do clustering is to **establish an equivalence between Eigendecomposition based procedure and clustering data points**. We only explore it from the Graph cut perspective based on normalized Laplacian.
+
+At the first sight we may feel amazing. Why it works? Why we pick exactly $k$ eigenvectors and why they are separable under this representation? Following the logic of [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf), the principle of explaining why Eigendecomposition can be used to do clustering is to **establish an equivalence between Eigendecomposition based procedure and clustering data points**. We only explore it from the Graph cut perspective based on normalized Laplacian.
 
 The essence of clustering is to separate data points based on their similarities. Given the similarity graph (where nodes are data points and edges are similarities) of these points, it aims to find a partition that edges within the same cluster are dense and between different clusters are sparse. This problem has been intensively studied in graph theory.
 
-Check [Cut](https://en.wikipedia.org/wiki/Cut_%28graph_theory%29) to distinguish similar concepts of cut, cut-set and Minimum cut. Given the adjacency matrix $W$ of a graph $G=(V,E)$, we define the following metric for two disjoint subsets $A,B\in V$:
+Check [Cut](https://en.wikipedia.org/wiki/Cut_%28graph_theory%29) to distinguish confusing concepts of cut, cut-set and Minimum cut. Given the adjacency matrix $W$ of a graph $G=(V,E)$, we define the following metric for two disjoint subsets $A,B\in V$:
 $$cut(A,B)=\sum_{i\in A,j\in B}w_{ij}$$
 and $\bar{A}$ as the [complement](https://en.wikipedia.org/wiki/Complement_%28set_theory%29) of $A$. For given $k$ clusters, we want to find a partition $A_1,A_2,...A_k$ that minimizes
-$$Cut(A_1,A_2,...A_k)=\frac{1}{2}\sum_{i=1}^kcut(A_i,\bar{A_i})$$.
-But simply minizing this metric would lead to large clusters. Several improvements were proposed and we mainly discuss normalized cut [Ncut](https://people.eecs.berkeley.edu/~malik/papers/SM-ncut.pdf):
+$$Cut(A_1,A_2,...A_k)=\frac{1}{2}\sum_{i=1}^kcut(A_i,\bar{A_i})$$
+But simply minimizing this metric would lead to large clusters. Several improvements were proposed and we mainly discuss normalized cut [Ncut](https://people.eecs.berkeley.edu/~malik/papers/SM-ncut.pdf):
 $$Ncut(A,B)=\sum_{i=1}^k\frac{cut(A_i,\bar{A_i})}{vol(A_i)}$$
 where $vol(A)=\sum_{i\in A,j}w_{i,j}=\sum_{i\in A}d_i$ and $d_i$ is the connectivity (degree) of $i$.
 
@@ -208,7 +220,7 @@ $$\begin{array}{ll}
 f'Lf=\frac{1}{2}\sum_{i\in A,j\in \bar{A}}w_{ij}\Big(\sqrt{\frac{vol(\bar{A})}{vol(A)}}+\sqrt{\frac{vol(A)}{vol(\bar{A})}}\Big)^2+
 \frac{1}{2}\sum_{i\in \bar{A},j\in A}w_{ij}\Big(-\sqrt{\frac{vol(A)}{vol(\bar{A})}}-\sqrt{\frac{vol(\bar{A})}{vol(A)}}\Big)^2\\
 =cut(A,\bar{A})\Big(\frac{vol(A)}{vol(\bar{A})}+\frac{vol(\bar{A})}{vol(A)}+2\Big)\\
-=cut(A,\bar{A})\Big(\frac{vol(A)+vol(\bar{A})}{vol(\bar{A})}+\frac{vol(\bar{A})+vol(A)}{vol(A)}+2\Big)\\
+=cut(A,\bar{A})\Big(\frac{vol(A)+vol(\bar{A})}{vol(\bar{A})}+\frac{vol(\bar{A})+vol(A)}{vol(A)}\Big)\\
 =vol(V)Ncut(A,\bar{A})
 \end{array}$$
 
