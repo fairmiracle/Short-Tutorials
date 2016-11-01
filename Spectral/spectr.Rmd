@@ -1,8 +1,8 @@
 ---
 title: "Foundations of Spectral Clustering"
 author: "Dong Li"
-#date: "27 October 2016"
-date: '`r format(Sys.Date(), "%B %d, %Y")`'
+date: "28 October 2016"
+#date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output: html_document
 ---
 
@@ -193,7 +193,7 @@ $$cut(A,B)=\sum_{i\in A,j\in B}w_{ij}$$
 and $\bar{A}$ as the [complement](https://en.wikipedia.org/wiki/Complement_%28set_theory%29) of $A$. For given $k$ clusters, we want to find a partition $A_1,A_2,...A_k$ that minimizes
 $$Cut(A_1,A_2,...A_k)=\frac{1}{2}\sum_{i=1}^kcut(A_i,\bar{A_i})$$
 But simply minimizing this metric would lead to large clusters. Several improvements were proposed and we mainly discuss normalized cut [Ncut](https://people.eecs.berkeley.edu/~malik/papers/SM-ncut.pdf):
-$$Ncut(A,B)=\sum_{i=1}^k\frac{cut(A_i,\bar{A_i})}{vol(A_i)}$$
+$$Ncut(A_1,A_2,...A_k)=\sum_{i=1}^k\frac{cut(A_i,\bar{A_i})}{vol(A_i)}$$
 where $vol(A)=\sum_{i\in A,j}w_{i,j}=\sum_{i\in A}d_i$ and $d_i$ is the connectivity (degree) of $i$.
 
 Next we want to derive normalized spectral clustering as relaxation of minimizing Ncut. Considering the simplest case When $k=2$, there are only $A$ and $\bar{A}$, we define the cluster indicator $f$ (this is the key idea) as
