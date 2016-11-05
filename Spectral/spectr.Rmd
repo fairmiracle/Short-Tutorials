@@ -118,7 +118,7 @@ We will see spectral clustering can work well here.
 [Spectral clustering](https://en.wikipedia.org/wiki/Spectral_clustering) makes use of spectrum(eigenvalues) of the similarity matrix to perform data analysis. One simple form of the algorithm goes like
 
 - Make the affinity matrix $A$ based on the similarity matrix $W$.
-- Make the diagonal matrix $D$ where $D_{ii}=\sum_jA_{ij}$, and the unnormalized Laplacian matrix $L=D-A$ or normalized Laplacian matrix $L=D^{-1/2}AD^{-1/2}$.
+- Make the diagonal matrix $D$ where $D_{ii}=\sum_jA_{ij}$, and the unnormalized Laplacian matrix $L=D-A$ or normalized Laplacian matrix $L_{sym}=D^{-1/2}LD^{-1/2}$.
 - Find the first k eigenvectors $x_1,x_2,...x_k$ of $L$ and form the new matrix $X=[x_1x_2...x_k]\in \mathbb{R}^{n\times k}$.
 - Conduct K-means on X.
 
@@ -156,7 +156,7 @@ make.affinity <- function(S, n.neighboors=3) {
 A <- make.affinity(S)
 d <- apply(A, 1, sum)
 L <- diag(d)-A                       # unnormalized version
-#L <- diag(d^-0.5)%*%A%*% diag(d^-0.5) # normalized version
+#L <- diag(d^-0.5)%*%L%*% diag(d^-0.5) # normalized version
 evL <- eigen(L,symmetric=TRUE)	# evL$values is decreasing sorted when symmetric=TRUE
 # pick the first k first k eigenvectors (corresponding k smallest) as data points in spectral space
 Z <- evL$vectors[,(ncol(evL$vectors)-k+1):ncol(evL$vectors)]
