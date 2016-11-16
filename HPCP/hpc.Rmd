@@ -1,0 +1,94 @@
+---
+title: "Towards High Performance Computing Programming"
+author: "Dong Li"
+date: "28 October 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Motivation
+
+I always want to make my program faster. During the past years I learned some tips on high performance computing programming, but they are widespread in different specific problems. Now it is time to summarize a bit and form a reference document as a reminder for myself. And this document is continually updated as other ones in this series.
+<!---
+During the past summer I tried my best to find as more meaningful modules in weighted networks, which is comptationally intensive. See the [challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) and our [solution](https://www.synapse.org/#!Synapse:syn7136340/wiki/403063). It turned out that the optimization based approach runs slowly even on High Performance Computers such as [Bluebear](https://intranet.birmingham.ac.uk/it/teams/infrastructure/research/bear/index.aspx). Speed has become important enough to affect the prograss. After the challenge I rewrote the core part of that algorithm in C and got 10x speedup. The topic is how to make the program more efficient.
+-->
+
+# Preparing: Benchmarking the running time
+
+In order to know the exact running time (cpu time) of a piece of code, we need the following system functions:
+
+### R
+```{r,eval=FALSE}
+ptm <- proc.time(); {your code}; proc.time() - ptm
+```
+
+### Matlab
+```
+tic; {your code}; toc
+```
+
+### Python
+```
+import time
+start_time = time.clock()
+# your code
+print time.clock() - start_time, "seconds"
+```
+
+### C
+```
+#include <time.h>
+clock_t tic = clock();
+// your code
+cpu_time_used = (double)(clock() - tic) / CLOCKS_PER_SEC
+```
+
+### Java
+```
+long startTime = System.currentTimeMillis();
+// your code
+long totalTime = System.currentTimeMillis() - startTime;
+```
+
+Find the bottleneck piece first, then try to optimize it!
+
+# Language choice
+
+It is a trade-off between efficiency and easy-to-use. Machine code is the most efficient language but probably no one really want to use it. Assembly is also efficient and close to processor instructions still few want to try nowadays. They are difficult to understand for most people. Most popular languages are close to human, some of them are popular among scholars just because of easy-to-use. Both Matlab and R allow us to write code just like deriving equations. The cost is efficiency, especially when involving many direct operations on matrices and vectors. 
+
+A reasonable choice is to combine both low-level languages like C/C++ and high-level scripts as Matlab/R. Take computational biology for example, R has been quite popular among biostatisticians/biologists for historical reasons, and many important databases are easily accessed by R packages. We can use R to do high-level but not computational intensive jobs: data access, preprocessing, basic statisitics analaysis, files manipulation, visualization (much easier with R) ..., and leave the bottleneck jobs such as numerical optimization for C/C++. We followed this principle in the package [AMOUNTAIN](https://github.com/fairmiracle/AMOUNTAIN) in which the C-version functions are faster 10x than pure R.
+
+# Always use libraries
+
+<span style="color:red">**Always use libraries just because thay are faster than what you write**!</span>
+
+Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well known Basic Linear Algebra Subprograms (BLAS) are the *de facto* standard low-level routines which is much more efficient than explicit implementation. On of the multiple choices of BLAS implementations is the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl), which provides common numerical libraries for C and C++ programmers. A nice summary of commonly used math libraries can be find at [Math Libraries](https://www.chpc.utah.edu/documentation/software/mathlibraries.php). 
+
+The best way to study a specific library is to use it!
+
+
+
+```
+Naive cpu time: 0.730000
+CBLAS cpu time: 0.130000
+Gap ||y1-y2|| between two methods: 0.000000
+```
+
+# Vectorization
+### Explicit vectorization design 
+### Specified functions
+bxfun for Matlab,
+apply, sapply, lapply in R
+# Better design of logic
+
+Sometimes it needs more considerations on trivial numerical 
+A good reference for the course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/)
+
+# Hardware considerations
+All above discussions are about running program on single machines. When dealing with big data, parallel and distributed computing almost becomes the only choice. 
+
+# Reference
+Blog 1: [Faster R: Things to not forget](http://pj.freefaculty.org/blog/?p=122)
