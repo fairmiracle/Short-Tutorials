@@ -1,8 +1,11 @@
 ---
 title: "Towards High Performance Computing Programming"
 author: "Dong Li"
-date: "28 October 2016"
-output: html_document
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -16,7 +19,7 @@ I always want to make my program faster. During the past years I learned some ti
 During the past summer I tried my best to find as more meaningful modules in weighted networks, which is comptationally intensive. See the [challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) and our [solution](https://www.synapse.org/#!Synapse:syn7136340/wiki/403063). It turned out that the optimization based approach runs slowly even on High Performance Computers such as [Bluebear](https://intranet.birmingham.ac.uk/it/teams/infrastructure/research/bear/index.aspx). Speed has become important enough to affect the prograss. After the challenge I rewrote the core part of that algorithm in C and got 10x speedup. The topic is how to make the program more efficient.
 -->
 
-# Preparing: Benchmarking the running time
+# Preparing
 
 In order to know the exact running time (cpu time) of a piece of code, we need the following system functions:
 
@@ -63,32 +66,102 @@ A reasonable choice is to combine both low-level languages like C/C++ and high-l
 
 # Always use libraries
 
-<span style="color:red">**Always use libraries just because thay are faster than what you write**!</span>
+<span style="color:red">**Just because thay are faster than what you write**!</span>
 
-Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well known Basic Linear Algebra Subprograms (BLAS) are the *de facto* standard low-level routines which is much more efficient than explicit implementation. On of the multiple choices of BLAS implementations is the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl), which provides common numerical libraries for C and C++ programmers. A nice summary of commonly used math libraries can be find at [Math Libraries](https://www.chpc.utah.edu/documentation/software/mathlibraries.php). 
+Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well known Basic Linear Algebra Subprograms (BLAS) are the *de facto* standard low-level routines which is much more efficient than explicit implementation. One of the multiple choices of BLAS implementations is the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl), which provides common numerical libraries for C and C++ programmers.
 
-The best way to study a specific library is to use it!
-
-
+Take a simple Matrix-Vector Multiplication for example. Given a matrix $A\in \mathbb{R}^{n\times n}$ and a vector ${\bf x}\in \mathbb{R}^n$, calculate ${\bf y}=A{\bf x}$. The explicit implementation is based on the fact that $y_i=\sum_{j}A_{ij}x_j$, the C code may look like:
 
 ```
-Naive cpu time: 0.730000
-CBLAS cpu time: 0.130000
-Gap ||y1-y2|| between two methods: 0.000000
+void mydgemv(double *A, double *x, double *y, int m, int n){
+	for (int i = 0; i < m; ++i)
+	{
+		double rowSum = 0;
+		for (int j = 0; j < n; ++j)
+		{
+			rowSum += A[i+j*n]*x[j];
+		}
+		y[i] = rowSum;
+	}
+}
+mydgemv(A, x, y1, n, n);
 ```
+
+It is also straightforward to call BLAS as
+```
+cblas_dgemv(CblasColMajor, CblasNoTrans, n, n, 1, A, n, x, 1, 0, y2, 1);
+```
+
+If we measure the CPU time, the difference between two methods is obvious when the matrix is large. When n=10000, the output is:
+```
+Naive cpu time: 7.083000
+CBLAS cpu time: 0.234000
+MSE ||y1-y2||^2 between two methods: 0.000000
+```
+
+Click [here](useBLAS.c) for full code, and to view as syntax-highlighted  [HTML](useBLAS.html).
+
+
+A nice summary of commonly used math libraries can be find at [Math Libraries](https://www.chpc.utah.edu/documentation/software/mathlibraries.php). The best way to study a specific library is to use it!
+
+# Use sparse matrices if possible
+
+sparse representation outperforms dense representation from two aspects: speed and memory. If the matrix itself is sparse, do not forget the corresponding libraries. 
+In Matlab try the following Matrix-Vector Multiplication:
+```
+n=10000;
+A = sprand(n,n,0.01);
+x = rand(n,1);
+tic; y1=A*x; toc
+B=full(A);
+tic; y2=B*x; toc
+norm(y1-y2)
+```
+
 
 # Vectorization
+
+Almost every tutorial on Matlab or R mentioned the importance of vectorization. The principle is to avoid explicit for-loops if possible. 
+
 ### Explicit vectorization design 
+Still on Matrix-Vector Multiplication, compare the following two ways:
+```
+n=10000;
+A = sprand(n,n,0.01);
+x = rand(n,1);
+y1 = zeros(n,1);
+tic
+for i=1:n
+  for j=1:n
+    y1(i) = y1(i) + A(i,j) * x(j);
+  end
+end
+toc
+tic; y2=A*x; toc
+norm(y1-y2)
+```
+
+But sometimes vectorization can be tricky.
+http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial
+https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html
+
 ### Specified functions
 bxfun for Matlab,
 apply, sapply, lapply in R
+In R even `i in 1:n` is suggested to be replaced as `i in seq_len(v)`
 # Better design of logic
 
 Sometimes it needs more considerations on trivial numerical 
 A good reference for the course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/)
 
 # Hardware considerations
+GPU
+Cluster
 All above discussions are about running program on single machines. When dealing with big data, parallel and distributed computing almost becomes the only choice. 
 
 # Reference
 Blog 1: [Faster R: Things to not forget](http://pj.freefaculty.org/blog/?p=122)
+
+[UFLDL Tutorial](http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial)
+
+https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html

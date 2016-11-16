@@ -4,81 +4,84 @@
 </head>
 <body bgcolor="#ffffff" text="#000000">
 <pre>
-<font color="#444444">/*
-* A simple example to show BLAS is faster than you
-*
-* Complie command under Linux:
-* gcc -c useBLAS.c -fPIC -std=c99
-* gcc useBLAS.o -o useBLAS -lgsl -lgslcblas
-*/</font>
-
-<font color="0000ff"><strong>#include <font color="#008000">&lt;stdio.h&gt;</font></strong></font>
-<font color="0000ff"><strong>#include <font color="#008000">&lt;stdlib.h&gt;</font></strong></font>
-<font color="0000ff"><strong>#include <font color="#008000">&lt;time.h&gt;</font></strong></font>
-<font color="0000ff"><strong>#include <font color="#008000">&lt;string.h&gt;</font></strong></font>
-<font color="0000ff"><strong>#include <font color="#008000">&lt;gsl/gsl_cblas.h&gt;</font></strong></font>
-
-<font color="0000ff"><strong>#define Malloc(type,n) (type *)malloc((n)*sizeof(type))</strong></font>
-<strong>void</strong> <font color="#2040a0">mydgemv</font><font color="4444FF">(</font><strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">A</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">x</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y</font>, <strong>int</strong> <font color="#2040a0">m</font>, <strong>int</strong> <font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
-<strong>int</strong> <font color="#2040a0">main</font><font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">argc</font>, <strong>char</strong> <strong>const</strong> <font color="4444FF">*</font><font color="#2040a0">argv</font><font color="4444FF">[</font><font color="4444FF">]</font><font color="4444FF">)</font>
-<font color="4444FF"><strong>{</strong></font>
-	<strong>int</strong> <font color="#2040a0">n</font> <font color="4444FF">=</font> <font color="#FF0000">10000</font><font color="4444FF">;</font>
-	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">A</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">*</font><font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">x</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y1</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y2</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
-	<font color="#444444">/* random generation */</font> 
-	<font color="#2040a0">srand</font><font color="4444FF">(</font><font color="#2040a0">time</font><font color="4444FF">(</font><font color="#2040a0">NULL</font><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">;</font>
-    <strong>for</strong><font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">i</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">i</font> <font color="4444FF">&lt;</font> <font color="#2040a0">n</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">i</font><font color="4444FF">)</font>
-    <font color="4444FF"><strong>{</strong></font>
-    	<font color="#2040a0">x</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">rand</font><font color="4444FF">(</font><font color="4444FF">)</font> / <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">RAND_MAX</font><font color="4444FF">;</font>
-        <strong>for</strong><font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">j</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">j</font> <font color="4444FF">&lt;</font> <font color="#2040a0">n</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">)</font>
-            <font color="#2040a0">A</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">*</font><font color="#2040a0">n</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">rand</font><font color="4444FF">(</font><font color="4444FF">)</font> / <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">RAND_MAX</font><font color="4444FF">;</font>
-    <font color="4444FF"><strong>}</strong></font>
-	
-	<font color="#444444">/* call naive implementation */</font>
-    <font color="#2040a0">clock_t</font> <font color="#2040a0">tic</font> <font color="4444FF">=</font> <font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">mydgemv</font><font color="4444FF">(</font><font color="#2040a0">A</font>, <font color="#2040a0">x</font>, <font color="#2040a0">y1</font>, <font color="#2040a0">n</font>, <font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<strong>double</strong> <font color="#2040a0">cpu_time_used1</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="4444FF">(</font><font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font> <font color="4444FF">-</font> <font color="#2040a0">tic</font><font color="4444FF">)</font> / <font color="#2040a0">CLOCKS_PER_SEC</font><font color="4444FF">;</font>
-	<font color="#2040a0">printf</font><font color="4444FF">(</font><font color="#008000">&quot;Naive cpu time: %f<font color="#77dd77">\n</font>&quot;</font>, <font color="#2040a0">cpu_time_used1</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
-	<font color="#444444">/* call CBLAS Level2 */</font>
-	<font color="#2040a0">tic</font> <font color="4444FF">=</font> <font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">cblas_dgemv</font><font color="4444FF">(</font><font color="#2040a0">CblasColMajor</font>, <font color="#2040a0">CblasNoTrans</font>, <font color="#2040a0">n</font>, <font color="#2040a0">n</font>, <font color="#FF0000">1</font>, <font color="#2040a0">A</font>, <font color="#2040a0">n</font>, <font color="#2040a0">x</font>, <font color="#FF0000">1</font>, <font color="#FF0000">0</font>, <font color="#2040a0">y2</font>, <font color="#FF0000">1</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<strong>double</strong> <font color="#2040a0">cpu_time_used2</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="4444FF">(</font><font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font> <font color="4444FF">-</font> <font color="#2040a0">tic</font><font color="4444FF">)</font> / <font color="#2040a0">CLOCKS_PER_SEC</font><font color="4444FF">;</font>
-	<font color="#2040a0">printf</font><font color="4444FF">(</font><font color="#008000">&quot;CBLAS cpu time: %f<font color="#77dd77">\n</font>&quot;</font>, <font color="#2040a0">cpu_time_used2</font><font color="4444FF">)</font><font color="4444FF">;</font>
-
-	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">diffy</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">memcpy</font><font color="4444FF">(</font><font color="#2040a0">diffy</font>, <font color="#2040a0">y1</font>, <font color="#2040a0">n</font><font color="4444FF">*</font><strong>sizeof</strong><font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">cblas_daxpy</font><font color="4444FF">(</font><font color="#2040a0">n</font>, <font color="4444FF">-</font><font color="#FF0000">1</font>, <font color="#2040a0">y2</font>, <font color="#FF0000">1</font>, <font color="#2040a0">diffy</font>, <font color="#FF0000">1</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#444444">/* call CBLAS Level1 */</font>
-	<font color="#2040a0">printf</font><font color="4444FF">(</font><font color="#008000">&quot;Gap ||y1-y2|| between two methods: %f<font color="#77dd77">\n</font>&quot;</font>, <font color="#2040a0">cblas_ddot</font><font color="4444FF">(</font><font color="#2040a0">n</font>, <font color="#2040a0">diffy</font>, <font color="#FF0000">1</font>, <font color="#2040a0">diffy</font>, <font color="#FF0000">1</font><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	
-	<font color="#444444">/* Clear memory */</font>
-	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">A</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">x</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">y1</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">y2</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">diffy</font><font color="4444FF">)</font><font color="4444FF">;</font>
-	<strong>return</strong> <font color="#2040a0">EXIT_SUCCESS</font><font color="4444FF">;</font>
-<font color="4444FF"><strong>}</strong></font>
-
-<font color="#444444">/* Naive implementation of matrix-vector production
-*  y = A*x, as y_i = \sum_jA_{ij}*x_j
-*/</font>
-<strong>void</strong> <font color="#2040a0">mydgemv</font><font color="4444FF">(</font><strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">A</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">x</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y</font>, <strong>int</strong> <font color="#2040a0">m</font>, <strong>int</strong> <font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF"><strong>{</strong></font>
-	<strong>for</strong> <font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">i</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">i</font> <font color="4444FF">&lt;</font> <font color="#2040a0">m</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">i</font><font color="4444FF">)</font>
-	<font color="4444FF"><strong>{</strong></font>
-		<strong>double</strong> <font color="#2040a0">rowSum</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font>
-		<strong>for</strong> <font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">j</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">j</font> <font color="4444FF">&lt;</font> <font color="#2040a0">n</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">)</font>
-		<font color="4444FF"><strong>{</strong></font>
-			<font color="#2040a0">rowSum</font> <font color="4444FF">+</font><font color="4444FF">=</font> <font color="#2040a0">A</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">*</font><font color="#2040a0">n</font><font color="4444FF">]</font><font color="4444FF">*</font><font color="#2040a0">x</font><font color="4444FF">[</font><font color="#2040a0">j</font><font color="4444FF">]</font><font color="4444FF">;</font>
-		<font color="4444FF"><strong>}</strong></font>
-		<font color="#2040a0">y</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="#2040a0">rowSum</font><font color="4444FF">;</font>
-	<font color="4444FF"><strong>}</strong></font>
-<font color="4444FF"><strong>}</strong></font>
+<a name="line1"> 1</a> <font color="#444444">/*
+<a name="line2"> 2</a>  * A simple example to show BLAS is faster than you
+<a name="line3"> 3</a>  *
+<a name="line4"> 4</a>  * Complie command under Linux:
+<a name="line5"> 5</a>  * gcc -c useBLAS.c -fPIC -std=c99
+<a name="line6"> 6</a>  * gcc useBLAS.o -o useBLAS -lgsl -lgslcblas
+<a name="line7"> 7</a>  */</font>
+<a name="line8"> 8</a> 
+<a name="line9"> 9</a> <font color="0000ff"><strong>#include <font color="#008000">&lt;stdio.h&gt;</font></strong></font>
+<a name="line10">10</a> <font color="0000ff"><strong>#include <font color="#008000">&lt;stdlib.h&gt;</font></strong></font>
+<a name="line11">11</a> <font color="0000ff"><strong>#include <font color="#008000">&lt;time.h&gt;</font></strong></font>
+<a name="line12">12</a> <font color="0000ff"><strong>#include <font color="#008000">&lt;string.h&gt;</font></strong></font>
+<a name="line13">13</a> <font color="0000ff"><strong>#include <font color="#008000">&lt;gsl/gsl_cblas.h&gt;</font></strong></font>
+<a name="line14">14</a> 
+<a name="line15">15</a> <font color="0000ff"><strong>#define Malloc(type,n) (type *)malloc((n)*sizeof(type))</strong></font>
+<a name="line16">16</a> <strong>void</strong> <font color="#2040a0">mydgemv</font><font color="4444FF">(</font><strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">A</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">x</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y</font>, <strong>int</strong> <font color="#2040a0">m</font>, <strong>int</strong> <font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line17">17</a> 
+<a name="line18">18</a> <strong>int</strong> <font color="#2040a0">main</font><font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">argc</font>, <strong>char</strong> <strong>const</strong> <font color="4444FF">*</font><font color="#2040a0">argv</font><font color="4444FF">[</font><font color="4444FF">]</font><font color="4444FF">)</font>
+<a name="line19">19</a> <font color="4444FF"><strong>{</strong></font>
+<a name="line20">20</a> 	<strong>int</strong> <font color="#2040a0">n</font> <font color="4444FF">=</font> <font color="#FF0000">10000</font><font color="4444FF">;</font>
+<a name="line21">21</a> 	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">A</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">*</font><font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line22">22</a> 	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">x</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line23">23</a> 	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y1</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line24">24</a> 	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y2</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line25">25</a> 
+<a name="line26">26</a> 	<font color="#444444">/* random generation */</font> 
+<a name="line27">27</a> 	<font color="#2040a0">srand</font><font color="4444FF">(</font><font color="#2040a0">time</font><font color="4444FF">(</font><font color="#2040a0">NULL</font><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line28">28</a>   	<strong>for</strong><font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">i</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">i</font> <font color="4444FF">&lt;</font> <font color="#2040a0">n</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">i</font><font color="4444FF">)</font>
+<a name="line29">29</a>   	<font color="4444FF"><strong>{</strong></font>
+<a name="line30">30</a>     	<font color="#2040a0">x</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">rand</font><font color="4444FF">(</font><font color="4444FF">)</font> / <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">RAND_MAX</font><font color="4444FF">;</font>
+<a name="line31">31</a>         <strong>for</strong><font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">j</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">j</font> <font color="4444FF">&lt;</font> <font color="#2040a0">n</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">)</font>
+<a name="line32">32</a>             <font color="#2040a0">A</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">*</font><font color="#2040a0">n</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">rand</font><font color="4444FF">(</font><font color="4444FF">)</font> / <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="#2040a0">RAND_MAX</font><font color="4444FF">;</font>
+<a name="line33">33</a>   	<font color="4444FF"><strong>}</strong></font>
+<a name="line34">34</a> 	
+<a name="line35">35</a> 	<font color="#444444">/* call naive implementation */</font>
+<a name="line36">36</a>   	<font color="#2040a0">clock_t</font> <font color="#2040a0">tic</font> <font color="4444FF">=</font> <font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line37">37</a> 	<font color="#2040a0">mydgemv</font><font color="4444FF">(</font><font color="#2040a0">A</font>, <font color="#2040a0">x</font>, <font color="#2040a0">y1</font>, <font color="#2040a0">n</font>, <font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line38">38</a> 	<strong>double</strong> <font color="#2040a0">cpu_time_used1</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="4444FF">(</font><font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font> <font color="4444FF">-</font> <font color="#2040a0">tic</font><font color="4444FF">)</font> / <font color="#2040a0">CLOCKS_PER_SEC</font><font color="4444FF">;</font>
+<a name="line39">39</a> 	<font color="#2040a0">printf</font><font color="4444FF">(</font><font color="#008000">&quot;Naive cpu time: %f<font color="#77dd77">\n</font>&quot;</font>, <font color="#2040a0">cpu_time_used1</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line40">40</a> 
+<a name="line41">41</a> 	<font color="#444444">/* call CBLAS Level2 */</font>
+<a name="line42">42</a> 	<font color="#2040a0">tic</font> <font color="4444FF">=</font> <font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line43">43</a> 	<font color="#2040a0">cblas_dgemv</font><font color="4444FF">(</font><font color="#2040a0">CblasColMajor</font>, <font color="#2040a0">CblasNoTrans</font>, <font color="#2040a0">n</font>, <font color="#2040a0">n</font>, <font color="#FF0000">1</font>, <font color="#2040a0">A</font>, <font color="#2040a0">n</font>, <font color="#2040a0">x</font>, <font color="#FF0000">1</font>, <font color="#FF0000">0</font>, <font color="#2040a0">y2</font>, <font color="#FF0000">1</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line44">44</a> 	<strong>double</strong> <font color="#2040a0">cpu_time_used2</font> <font color="4444FF">=</font> <font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="4444FF">(</font><font color="#2040a0">clock</font><font color="4444FF">(</font><font color="4444FF">)</font> <font color="4444FF">-</font> <font color="#2040a0">tic</font><font color="4444FF">)</font> / <font color="#2040a0">CLOCKS_PER_SEC</font><font color="4444FF">;</font>
+<a name="line45">45</a> 	<font color="#2040a0">printf</font><font color="4444FF">(</font><font color="#008000">&quot;CBLAS cpu time: %f<font color="#77dd77">\n</font>&quot;</font>, <font color="#2040a0">cpu_time_used2</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line46">46</a> 
+<a name="line47">47</a> 	<strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">diffy</font> <font color="4444FF">=</font> <font color="#2040a0">Malloc</font><font color="4444FF">(</font><strong>double</strong>,<font color="#2040a0">n</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line48">48</a> 	<font color="#2040a0">memcpy</font><font color="4444FF">(</font><font color="#2040a0">diffy</font>, <font color="#2040a0">y1</font>, <font color="#2040a0">n</font><font color="4444FF">*</font><strong>sizeof</strong><font color="4444FF">(</font><strong>double</strong><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line49">49</a> 	<font color="#2040a0">cblas_daxpy</font><font color="4444FF">(</font><font color="#2040a0">n</font>, <font color="4444FF">-</font><font color="#FF0000">1</font>, <font color="#2040a0">y2</font>, <font color="#FF0000">1</font>, <font color="#2040a0">diffy</font>, <font color="#FF0000">1</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line50">50</a> 	<font color="#444444">/* call CBLAS Level1 */</font>
+<a name="line51">51</a> 	<font color="#2040a0">printf</font><font color="4444FF">(</font><font color="#008000">&quot;MSE ||y1-y2||^2 between two methods: %f<font color="#77dd77">\n</font>&quot;</font>, <font color="#2040a0">cblas_ddot</font><font color="4444FF">(</font><font color="#2040a0">n</font>, <font color="#2040a0">diffy</font>, <font color="#FF0000">1</font>, <font color="#2040a0">diffy</font>, <font color="#FF0000">1</font><font color="4444FF">)</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line52">52</a> 	
+<a name="line53">53</a> 	<font color="#444444">/* Clear memory */</font>
+<a name="line54">54</a> 	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">A</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line55">55</a> 	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">x</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line56">56</a> 	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">y1</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line57">57</a> 	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">y2</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line58">58</a> 	<font color="#2040a0">free</font><font color="4444FF">(</font><font color="#2040a0">diffy</font><font color="4444FF">)</font><font color="4444FF">;</font>
+<a name="line59">59</a> 	<strong>return</strong> <font color="#2040a0">EXIT_SUCCESS</font><font color="4444FF">;</font>
+<a name="line60">60</a> <font color="4444FF"><strong>}</strong></font>
+<a name="line61">61</a> 
+<a name="line62">62</a> <font color="#444444">/* 
+<a name="line63">63</a>  * Naive implementation of matrix-vector production
+<a name="line64">64</a>  * y = A*x, as y_i = \sum_jA_{ij}*x_j
+<a name="line65">65</a>  */</font>
+<a name="line66">66</a> <strong>void</strong> <font color="#2040a0">mydgemv</font><font color="4444FF">(</font><strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">A</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">x</font>, <strong>double</strong> <font color="4444FF">*</font><font color="#2040a0">y</font>, <strong>int</strong> <font color="#2040a0">m</font>, <strong>int</strong> <font color="#2040a0">n</font><font color="4444FF">)</font>
+<a name="line67">67</a> <font color="4444FF"><strong>{</strong></font>
+<a name="line68">68</a> 	<strong>for</strong> <font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">i</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">i</font> <font color="4444FF">&lt;</font> <font color="#2040a0">m</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">i</font><font color="4444FF">)</font>
+<a name="line69">69</a> 	<font color="4444FF"><strong>{</strong></font>
+<a name="line70">70</a> 		<strong>double</strong> <font color="#2040a0">rowSum</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font>
+<a name="line71">71</a> 		<strong>for</strong> <font color="4444FF">(</font><strong>int</strong> <font color="#2040a0">j</font> <font color="4444FF">=</font> <font color="#FF0000">0</font><font color="4444FF">;</font> <font color="#2040a0">j</font> <font color="4444FF">&lt;</font> <font color="#2040a0">n</font><font color="4444FF">;</font> <font color="4444FF">+</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">)</font>
+<a name="line72">72</a> 		<font color="4444FF"><strong>{</strong></font>
+<a name="line73">73</a> 			<font color="#2040a0">rowSum</font> <font color="4444FF">+</font><font color="4444FF">=</font> <font color="#2040a0">A</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">+</font><font color="#2040a0">j</font><font color="4444FF">*</font><font color="#2040a0">n</font><font color="4444FF">]</font><font color="4444FF">*</font><font color="#2040a0">x</font><font color="4444FF">[</font><font color="#2040a0">j</font><font color="4444FF">]</font><font color="4444FF">;</font>
+<a name="line74">74</a> 		<font color="4444FF"><strong>}</strong></font>
+<a name="line75">75</a> 		<font color="#2040a0">y</font><font color="4444FF">[</font><font color="#2040a0">i</font><font color="4444FF">]</font> <font color="4444FF">=</font> <font color="#2040a0">rowSum</font><font color="4444FF">;</font>
+<a name="line76">76</a> 	<font color="4444FF"><strong>}</strong></font>
+<a name="line77">77</a> <font color="4444FF"><strong>}</strong></font>
+
 </pre>
 <hr>
 syntax highlighted by <a href="http://www.palfrader.org/code2html">Code2HTML</a>, v. 0.9.1

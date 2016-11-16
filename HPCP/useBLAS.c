@@ -25,15 +25,15 @@ int main(int argc, char const *argv[])
 
 	/* random generation */ 
 	srand(time(NULL));
-    for(int i = 0; i < n; ++i)
-    {
+  for(int i = 0; i < m; ++i)
+  {
     	x[i] = (double)rand() / (double)RAND_MAX;
         for(int j = 0; j < n; ++j)
             A[i+j*n] = (double)rand() / (double)RAND_MAX;
-    }
+  }
 	
 	/* call naive implementation */
-    clock_t tic = clock();
+  clock_t tic = clock();
 	mydgemv(A, x, y1, n, n);
 	double cpu_time_used1 = (double)(clock() - tic) / CLOCKS_PER_SEC;
 	printf("Naive cpu time: %f\n", cpu_time_used1);
@@ -62,7 +62,8 @@ int main(int argc, char const *argv[])
 /* Naive implementation of matrix-vector production
 *  y = A*x, as y_i = \sum_jA_{ij}*x_j
 */
-void mydgemv(double *A, double *x, double *y, int m, int n){
+void mydgemv(double *A, double *x, double *y, int m, int n)
+{
 	for (int i = 0; i < m; ++i)
 	{
 		double rowSum = 0;
