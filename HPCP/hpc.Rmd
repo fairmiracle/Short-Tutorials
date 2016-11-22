@@ -136,7 +136,7 @@ y2 <- rep(0,n)
 ptm <- proc.time()
 for (i in seq_len(n))
     for(j in seq_len(n))
-        y1[i] = y1[i] + A[i,j]*x[j]
+        y1[i] <- y1[i] + A[i,j]*x[j]
 proc.time() - ptm
 ptm <- proc.time()
 y2 <- A%*%x
@@ -150,7 +150,7 @@ m <- 1000
 n <- 5000
 x <- rnorm(m)
 y <- rnorm(n)
-D = matrix(0,nrow=m,ncol=n);
+D <- matrix(0,nrow=m,ncol=n)
 ptm <- proc.time()
 for (i in seq_len(m))
     for (j in seq_len(n))
@@ -158,7 +158,7 @@ for (i in seq_len(m))
 proc.time() - ptm
 ```
 
-If we rewrite the equation $D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j$ into matrix form $D = \hat{X} + \hat{Y} - 2xy^T$, where $\hat{X}\in\mathbb{R}^{m\times n}$ is replicated from the vector ${\bf x}^2$ by $n$ columns and $\hat{Y}\in\mathbb{R}^{m\times n}$ is replicated from the vector $t({\bf y})^2$ by $m$ rows.
+If we rewrite the equation $D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j$ into matrix form $D = \hat{X} + \hat{Y} - 2xy^T$, where $\hat{X}\in\mathbb{R}^{m\times n}$ is replicated from the vector ${\bf x}^2$ by $n$ columns and $\hat{Y}\in\mathbb{R}^{m\times n}$ is replicated from the vector $t({\bf y}^2)$ by $m$ rows.
 $$D = \begin{bmatrix}
  x_{11}^2&x_{12}^2  & \cdots  & x_{1n}^2\\ 
  x_{21}^2&x_{22}^2  & \cdots  & x_{2n}^2 \\ 

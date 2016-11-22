@@ -239,10 +239,10 @@ y2 &lt;- rep(0,n)
 ptm &lt;- proc.time()
 for (i in seq_len(n))
     for(j in seq_len(n))
-        y1[i] = y1[i] + A[i,j]*x[j]
+        y1[i] &lt;- y1[i] + A[i,j]*x[j]
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    1.98    0.01    2.03</code></pre>
+##    1.92    0.00    1.92</code></pre>
 <pre class="r"><code>ptm &lt;- proc.time()
 y2 &lt;- A%*%x
 proc.time() - ptm</code></pre>
@@ -255,15 +255,15 @@ proc.time() - ptm</code></pre>
 n &lt;- 5000
 x &lt;- rnorm(m)
 y &lt;- rnorm(n)
-D = matrix(0,nrow=m,ncol=n);
+D &lt;- matrix(0,nrow=m,ncol=n)
 ptm &lt;- proc.time()
 for (i in seq_len(m))
     for (j in seq_len(n))
         D[i,j] &lt;- (x[i] - y[j])^2;
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    9.81    0.01    9.83</code></pre>
-<p>If we rewrite the equation <span class="math inline">\(D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j\)</span> into matrix form <span class="math inline">\(D = \hat{X} + \hat{Y} - 2xy^T\)</span>, where <span class="math inline">\(\hat{X}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\({\bf x}^2\)</span> by <span class="math inline">\(n\)</span> columns and <span class="math inline">\(\hat{Y}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\(t({\bf y})^2\)</span> by <span class="math inline">\(m\)</span> rows. <span class="math display">\[D = \begin{bmatrix}
+##    9.66    0.00    9.65</code></pre>
+<p>If we rewrite the equation <span class="math inline">\(D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j\)</span> into matrix form <span class="math inline">\(D = \hat{X} + \hat{Y} - 2xy^T\)</span>, where <span class="math inline">\(\hat{X}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\({\bf x}^2\)</span> by <span class="math inline">\(n\)</span> columns and <span class="math inline">\(\hat{Y}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\(t({\bf y}^2)\)</span> by <span class="math inline">\(m\)</span> rows. <span class="math display">\[D = \begin{bmatrix}
  x_{11}^2&amp;x_{12}^2  &amp; \cdots  &amp; x_{1n}^2\\ 
  x_{21}^2&amp;x_{22}^2  &amp; \cdots  &amp; x_{2n}^2 \\ 
  \vdots &amp; \vdots &amp; \ddots  &amp; \vdots\\ 
@@ -284,9 +284,9 @@ x_{m}y_{1}&amp;x_{m}y_{2}  &amp; \cdots  &amp; x_{m}y_{n}
 D2 &lt;- matrix(rep(x^2,n),nrow=m) + matrix(rep(y^2,m),nrow=m,byrow=TRUE) - 2*x%*%t(y)
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.19    0.03    0.22</code></pre>
+##    0.20    0.02    0.22</code></pre>
 <pre class="r"><code>norm(D - D2)</code></pre>
-<pre><code>## [1] 2.091549e-12</code></pre>
+<pre><code>## [1] 1.218997e-12</code></pre>
 </div>
 <div id="specified-functions" class="section level3">
 <h3>Specified functions</h3>
@@ -327,12 +327,12 @@ ptm &lt;- proc.time()
 A &lt;- (X%*%Y)%*%Z
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##   12.53    0.58   13.13</code></pre>
+##   12.97    0.67   13.63</code></pre>
 <pre class="r"><code>ptm &lt;- proc.time()
 A &lt;- X%*%(Y%*%Z)
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.11    0.01    0.13</code></pre>
+##    0.13    0.00    0.12</code></pre>
 <p>Because the second way need less operations. For details see <a href="https://en.wikipedia.org/wiki/Matrix_chain_multiplication">Matrix chain multiplication</a></p>
 </div>
 <div id="loops" class="section level3">
