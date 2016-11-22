@@ -11,6 +11,7 @@
 
 <meta name="author" content="Dong Li" />
 
+<meta name="date" content="2016-11-22" />
 
 <title>Towards High Performance Computing Programming</title>
 
@@ -118,7 +119,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Towards High Performance Computing Programming</h1>
 <h4 class="author"><em>Dong Li</em></h4>
-<h4 class="date"><em>十一月 16, 2016</em></h4>
+<h4 class="date"><em>November 22, 2016</em></h4>
 
 </div>
 
@@ -126,20 +127,21 @@ $(document).ready(function () {
 <ul>
 <li><a href="#motivation">Motivation</a></li>
 <li><a href="#preparing">Preparing</a></li>
-<li><a href="#language-choice">Language choice</a></li>
+<li><a href="#languages-choice">Languages choice</a></li>
 <li><a href="#always-use-libraries">Always use libraries</a></li>
-<li><a href="#use-sparse-matrices-if-possible">Use sparse matrices if possible</a></li>
 <li><a href="#vectorization">Vectorization</a></li>
+<li><a href="#better-design-of-logic">Better design of logic</a></li>
 <li><a href="#hardware-considerations">Hardware considerations</a></li>
+<li><a href="#acknowledgement">Acknowledgement</a></li>
 <li><a href="#reference">Reference</a></li>
 </ul>
 </div>
 
 <div id="motivation" class="section level1">
 <h1>Motivation</h1>
-<p>I always want to make my program faster. During the past years I learned some tips on high performance computing programming, but they are widespread in different specific problems. Now it is time to summarize a bit and form a reference document as a reminder for myself. And this document is continually updated as other ones in this series. <!---
-During the past summer I tried my best to find as more meaningful modules in weighted networks, which is comptationally intensive. See the [challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) and our [solution](https://www.synapse.org/#!Synapse:syn7136340/wiki/403063). It turned out that the optimization based approach runs slowly even on High Performance Computers such as [Bluebear](https://intranet.birmingham.ac.uk/it/teams/infrastructure/research/bear/index.aspx). Speed has become important enough to affect the prograss. After the challenge I rewrote the core part of that algorithm in C and got 10x speedup. The topic is how to make the program more efficient.
---></p>
+<p>I always want to make my program faster. During the past years, I learned some tips on high performance computing programming, but they are widespread in different specific problems.</p>
+<p>In the past summer, I tried my best to find as more meaningful modules in weighted networks, which is computationally intensive. See the <a href="https://www.synapse.org/#!Synapse:syn6156761/wiki/400645">challenge</a> and our <a href="https://www.synapse.org/#!Synapse:syn7136340/wiki/403063">solution</a>. It turned out that the optimization based approach runs slowly even on High Performance Computers such as <a href="https://intranet.birmingham.ac.uk/it/teams/infrastructure/research/bear/index.aspx">Bluebear</a>. Speed has become important enough to affect the progress. After the challenge, I rewrote the core part of that algorithm in C with BLAS and got 10x+ speedup. It is a general strategy to combine C and R for a computationally intensive problem.</p>
+<p>Now it is time to summarize a bit and form a reference document as a reminder for myself. And this document is continually updated as other ones in this series, since covering wide aspects under this topic is not easy for me.</p>
 </div>
 <div id="preparing" class="section level1">
 <h1>Preparing</h1>
@@ -174,17 +176,26 @@ long totalTime = System.currentTimeMillis() - startTime;</code></pre>
 <p>Find the bottleneck piece first, then try to optimize it!</p>
 </div>
 </div>
-<div id="language-choice" class="section level1">
-<h1>Language choice</h1>
-<p>It is a trade-off between efficiency and easy-to-use. Machine code is the most efficient language but probably no one really want to use it. Assembly is also efficient and close to processor instructions still few want to try nowadays. They are difficult to understand for most people. Most popular languages are close to human, some of them are popular among scholars just because of easy-to-use. Both Matlab and R allow us to write code just like deriving equations. The cost is efficiency, especially when involving many direct operations on matrices and vectors.</p>
-<p>A reasonable choice is to combine both low-level languages like C/C++ and high-level scripts as Matlab/R. Take computational biology for example, R has been quite popular among biostatisticians/biologists for historical reasons, and many important databases are easily accessed by R packages. We can use R to do high-level but not computational intensive jobs: data access, preprocessing, basic statisitics analaysis, files manipulation, visualization (much easier with R) …, and leave the bottleneck jobs such as numerical optimization for C/C++. We followed this principle in the package <a href="https://github.com/fairmiracle/AMOUNTAIN">AMOUNTAIN</a> in which the C-version functions are faster 10x than pure R.</p>
+<div id="languages-choice" class="section level1">
+<h1>Languages choice</h1>
+<p>It is a trade-off between efficiency and easy-to-use. Machine code is the most efficient language but probably no one really wants to use it. Assembly is also efficient and close to processor instructions still few want to try nowadays. They are difficult to understand for most people. Most popular languages are close to human, some of them are popular among scholars just because of easy-to-use. Both Matlab and R allow us to write code just like deriving equations. The cost is efficiency, especially when involving many direct operations on matrices and vectors.</p>
+<div id="combine-them" class="section level3">
+<h3>Combine them</h3>
+<p>A reasonable choice is to combine both low-level languages like C/C++ and high-level scripts as Matlab/R. Take computational biology for example, R has been quite popular among biostatisticians/biologists for historical reasons, and many important databases are easily accessed by R packages. We can use R to do high-level but not computational intensive jobs: data access, preprocessing, basic statistics analysis, files manipulation, visualization (much easier with R) …, and leave the bottleneck jobs such as numerical optimization for C/C++. We followed this principle in the package <a href="https://github.com/fairmiracle/AMOUNTAIN">AMOUNTAIN</a>.</p>
+</div>
 </div>
 <div id="always-use-libraries" class="section level1">
 <h1>Always use libraries</h1>
 <p><span style="color:red"><strong>Just because thay are faster than what you write</strong>!</span></p>
-<p>Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well known Basic Linear Algebra Subprograms (BLAS) are the <em>de facto</em> standard low-level routines which is much more efficient than explicit implementation. One of the multiple choices of BLAS implementations is the <a href="https://www.gnu.org/software/gsl">GNU Scientific Library (GSL)</a>, which provides common numerical libraries for C and C++ programmers.</p>
-<p>Take a simple Matrix-Vector Multiplication for example. Given a matrix <span class="math inline">\(A\in \mathbb{R}^{n\times n}\)</span> and a vector <span class="math inline">\({\bf x}\in \mathbb{R}^n\)</span>, calculate <span class="math inline">\({\bf y}=A{\bf x}\)</span>. The explicit implementation is based on the fact that <span class="math inline">\(y_i=\sum_{j}A_{ij}x_j\)</span>, the C code may look like:</p>
-<pre><code>void mydgemv(double *A, double *x, double *y, int m, int n){
+<p>Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well-known Basic Linear Algebra Subprograms (BLAS) are the <em>de facto</em> standard low-level routines which is much more efficient than explicit implementation. One of the multiple choices of BLAS implementations is the <a href="https://www.gnu.org/software/gsl">GNU Scientific Library (GSL)</a>, which provides common numerical libraries for C and C++ programmers.</p>
+<p>BLAS routines is categorized into three levels based on the complexity:</p>
+<ul>
+<li>Level 1: vector operations, such as <code>axpy</code>, doing <span class="math inline">\({\bf y} \leftarrow \alpha{\bf x} + {\bf y}\)</span>.</li>
+<li>Level 2: matrix-vector operations, such as <code>gemv</code>, doing <span class="math inline">\({\bf y} \leftarrow \alpha A{\bf x} + \beta{\bf y}\)</span>.</li>
+<li>Level 3: matrix-matrix operations, such as <code>gemm</code>, doing <span class="math inline">\(C \leftarrow \alpha AB + \beta C\)</span>.</li>
+</ul>
+<p>Take a simple level-2 matrix-vector multiplication for example. Given a matrix <span class="math inline">\(A\in \mathbb{R}^{n\times n}\)</span> and a vector <span class="math inline">\({\bf x}\in \mathbb{R}^n\)</span>, calculate <span class="math inline">\({\bf y}=A{\bf x}\)</span>. The explicit implementation is based on the fact that <span class="math inline">\(y_i=\sum_{j}A_{ij}x_j\)</span>, the C code may look like:</p>
+<pre><code>void naivemv(double *A, double *x, double *y, int m, int n){
     for (int i = 0; i &lt; m; ++i)
     {
         double rowSum = 0;
@@ -195,57 +206,169 @@ long totalTime = System.currentTimeMillis() - startTime;</code></pre>
         y[i] = rowSum;
     }
 }
-mydgemv(A, x, y1, n, n);</code></pre>
+int main(int argc, char const *argv[]){\
+    ...
+    naivemv(A, x, y1, n, n);
+    ...
+}</code></pre>
 <p>It is also straightforward to call BLAS as</p>
 <pre><code>cblas_dgemv(CblasColMajor, CblasNoTrans, n, n, 1, A, n, x, 1, 0, y2, 1);</code></pre>
-<p>If we measure the CPU time, the difference between two methods is obvious when the matrix is large. When n=10000, the output is:</p>
+<p>If we measure the CPU time, the difference between two methods is obvious when the matrix is large. When <span class="math inline">\(n=10000\)</span>, the output is:</p>
 <pre><code>Naive cpu time: 7.083000
 CBLAS cpu time: 0.234000
 MSE ||y1-y2||^2 between two methods: 0.000000</code></pre>
-<p>Click <a href="useBLAS.c">here</a> for full code, and to view as syntax-highlighted <a href="useBLAS.html">HTML</a>.</p>
-<p>A nice summary of commonly used math libraries can be find at <a href="https://www.chpc.utah.edu/documentation/software/mathlibraries.php">Math Libraries</a>. The best way to study a specific library is to use it!</p>
+<p>Click <a href="useBLAS.c">here</a> for full code, and to view as syntax-highlighted <a href="useBLAS.html">HTML</a>. This code can be used as a starter dish to use CBLAS. A more comprehensive comparison between BLAS and non-BLAS implementations of matrix-matrix multiplication is given by <a href="https://jemnz.com/matrixmultiply.html">Jacob Mattingley</a>, yes the author of <a href="http://jemdoc.jaboc.net/">jemdoc</a>.</p>
+<p>BLAS is further optimized from different aspects. A nice summary of commonly used math libraries can be found at <a href="https://www.chpc.utah.edu/documentation/software/mathlibraries.php">Math Libraries</a>. If you are using CUDA to program on NVIDIA GPU, there is also a specified library <a href="https://developer.nvidia.com/cublas">cuBLAS</a>.</p>
+<p>The best way to study a specific library is to use it!</p>
+<div id="use-sparse-matrices-if-possible" class="section level3">
+<h3>Use sparse matrices if possible</h3>
+<p>Sparse representation outperforms dense representation from two aspects: speed and memory usage. If the matrix itself is sparse, do not forget to use the corresponding libraries. In R we need additional ‘Matrix’ package. Even on GPU there are specified libraries for sparse matrix, see <a href="https://developer.nvidia.com/cusparse">cuSPARSE</a>. An example to use cuBLA and cuSPARSE to implement CJ Lin’s NMF is available at <a href="https://github.com/fairmiracle/NMF/blob/master/NMF.cu">my github</a>, to view the syntax-highlighted <a href="NMF.html">HTML</a>.</p>
 </div>
-<div id="use-sparse-matrices-if-possible" class="section level1">
-<h1>Use sparse matrices if possible</h1>
-<p>sparse representation outperforms dense representation from two aspects: speed and memory. If the matrix itself is sparse, do not forget the corresponding libraries. In Matlab try the following Matrix-Vector Multiplication:</p>
-<pre><code>n=10000;
-A = sprand(n,n,0.01);
-x = rand(n,1);
-tic; y1=A*x; toc
-B=full(A);
-tic; y2=B*x; toc
-norm(y1-y2)</code></pre>
 </div>
 <div id="vectorization" class="section level1">
 <h1>Vectorization</h1>
-<p>Almost every tutorial on Matlab or R mentioned the importance of vectorization. The principle is to avoid explicit for-loops if possible.</p>
+<p>Almost every tutorial on Matlab or R would have mentioned the importance of vectorization. The principle is to avoid explicit for-loops if possible. Since there is an <a href="https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html">official guide</a> and lots other resources for Matlab, the following example codes mainly use R.</p>
 <div id="explicit-vectorization-design" class="section level3">
 <h3>Explicit vectorization design</h3>
-<p>Still on Matrix-Vector Multiplication, compare the following two ways:</p>
-<pre><code>n=10000;
-A = sprand(n,n,0.01);
-x = rand(n,1);
-y1 = zeros(n,1);
+<p>Still on matrix-vector Multiplication, compare the following two ways in R:</p>
+<pre class="r"><code>n &lt;- 1000
+A &lt;- matrix(rnorm(n*n),nrow=n)
+x &lt;- rnorm(n)
+y1 &lt;- rep(0,n)
+y2 &lt;- rep(0,n)
+ptm &lt;- proc.time()
+for (i in seq_len(n))
+    for(j in seq_len(n))
+        y1[i] = y1[i] + A[i,j]*x[j]
+proc.time() - ptm</code></pre>
+<pre><code>##    user  system elapsed 
+##    1.98    0.01    2.03</code></pre>
+<pre class="r"><code>ptm &lt;- proc.time()
+y2 &lt;- A%*%x
+proc.time() - ptm</code></pre>
+<pre><code>##    user  system elapsed 
+##       0       0       0</code></pre>
+<pre class="r"><code>norm(y1-y2)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>But sometimes vectorization can be tricky. Take the pairwise distances for example: given two vectors <span class="math inline">\({\bf x}\in \mathbb{R}^m\)</span> and <span class="math inline">\({\bf y}\in \mathbb{R}^n\)</span>, calculate a distance matrix <span class="math inline">\(D\in \mathbb{R}^{m\times n}\)</span> where <span class="math inline">\(D_{ij}=|x_i-y_j|\)</span>. Naive method comes with two <code>for-loops</code></p>
+<pre class="r"><code>m &lt;- 1000
+n &lt;- 5000
+x &lt;- rnorm(m)
+y &lt;- rnorm(n)
+D = matrix(0,nrow=m,ncol=n);
+ptm &lt;- proc.time()
+for (i in seq_len(m))
+    for (j in seq_len(n))
+        D[i,j] &lt;- (x[i] - y[j])^2;
+proc.time() - ptm</code></pre>
+<pre><code>##    user  system elapsed 
+##    9.81    0.01    9.83</code></pre>
+<p>If we rewrite the equation <span class="math inline">\(D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j\)</span> into matrix form <span class="math inline">\(D = \hat{X} + \hat{Y} - 2xy^T\)</span>, where <span class="math inline">\(\hat{X}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\({\bf x}^2\)</span> by <span class="math inline">\(n\)</span> columns and <span class="math inline">\(\hat{Y}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\(t({\bf y})^2\)</span> by <span class="math inline">\(m\)</span> rows. <span class="math display">\[D = \begin{bmatrix}
+ x_{11}^2&amp;x_{12}^2  &amp; \cdots  &amp; x_{1n}^2\\ 
+ x_{21}^2&amp;x_{22}^2  &amp; \cdots  &amp; x_{2n}^2 \\ 
+ \vdots &amp; \vdots &amp; \ddots  &amp; \vdots\\ 
+ x_{m1}^2&amp;x_{m2}^2  &amp; \cdots  &amp; x_{mn}^2 
+\end{bmatrix}+\begin{bmatrix}
+ y_{11}^2&amp;y_{12}^2  &amp; \cdots  &amp; y_{1n}^2\\ 
+ y_{21}^2&amp;y_{22}^2  &amp; \cdots  &amp; y_{2n}^2 \\ 
+ \vdots &amp; \vdots &amp; \ddots  &amp; \vdots\\ 
+ y_{m1}^2&amp;y_{m2}^2  &amp; \cdots  &amp; y_{mn}^2 
+\end{bmatrix}-2\begin{bmatrix}
+ x_{1}y_{1}&amp; x_{1}y_{2} &amp; \cdots  &amp; x_{1}y_{n}\\ 
+ x_{2}y_{1}&amp;x_{2}y_{2}  &amp; \cdots  &amp; x_{2}y_{n} \\ 
+ \vdots &amp; \vdots &amp; \ddots  &amp; \vdots\\ 
+x_{m}y_{1}&amp;x_{m}y_{2}  &amp; \cdots  &amp; x_{m}y_{n} 
+\end{bmatrix}\]</span></p>
+<p>Compare the following example with previous one:</p>
+<pre class="r"><code>ptm &lt;- proc.time()
+D2 &lt;- matrix(rep(x^2,n),nrow=m) + matrix(rep(y^2,m),nrow=m,byrow=TRUE) - 2*x%*%t(y)
+proc.time() - ptm</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.19    0.03    0.22</code></pre>
+<pre class="r"><code>norm(D - D2)</code></pre>
+<pre><code>## [1] 2.091549e-12</code></pre>
+</div>
+<div id="specified-functions" class="section level3">
+<h3>Specified functions</h3>
+<p>We have already seen how we construct a matrix by replicating rows or columns with <code>rep</code> in R. Many specified functions in R/Matlab support vectorization well. <code>apply</code>, <code>sapply</code>, <code>lapply</code>, … in R belong to a family that conduct vectorized operations on an array/matrix.</p>
+<p>In Matlab, the corresponding function for replicating is <code>repmat</code>. The same example in Matlab goes like:</p>
+<pre><code>m = 1000;
+n = 5000;
+x = rand(m,1);
+y = rand(n,1);
+D = zeros(m,n);
 tic
-for i=1:n
-  for j=1:n
-    y1(i) = y1(i) + A(i,j) * x(j);
-  end
+for i = 1:m
+    for j = 1:n
+        D(i,j) = (x(i)-y(j))^2;
+    end
 end
 toc
-tic; y2=A*x; toc
-norm(y1-y2)</code></pre>
-<p>But sometimes vectorization can be tricky. <a href="http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial" class="uri">http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial</a> <a href="https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html" class="uri">https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html</a> ### Specified functions bxfun for Matlab, apply, sapply, lapply in R In R even <code>i in 1:n</code> is suggested to be replaced as <code>i in seq_len(v)</code> # Better design of logic</p>
-<p>Sometimes it needs more considerations on trivial numerical A good reference for the course by CJ Lin: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a></p>
+tic;D2 = repmat(x.^2,1,n) + repmat((y.^2)',m,1) - 2*x*y';toc</code></pre>
+<p>Output:</p>
+<pre><code>Elapsed time is 0.264319 seconds.
+Elapsed time is 0.066499 seconds.</code></pre>
+<p>In Matlab <code>bxfun</code> is the most useful function for pair-wise operations. In the pairwise distance example can be further optimized with <code>bxfun</code> by replacing <code>+</code> and <code>-</code> between matrices:</p>
+<pre><code>tic;D3 = bsxfun(@minus,bsxfun(@plus,repmat(x.^2,1,n),repmat((y.^2)',m,1)),2*x*y');toc</code></pre>
+<p>Output:</p>
+<pre><code>Elapsed time is 0.059941 seconds.</code></pre>
+<p>Again this is a dilemma between efficiency and easy-to-use: for-loops make the code more readable but severely compromise the efficiency. Efficient vectorization is not that straightforward and requires more effort.</p>
+</div>
+</div>
+<div id="better-design-of-logic" class="section level1">
+<h1>Better design of logic</h1>
+<div id="orders" class="section level3">
+<h3>Orders</h3>
+<p>Sometimes it needs more considerations on trivial numerical operations. Given three matrices <span class="math inline">\(X\in \mathbb{R}^{m\times n}\)</span>, <span class="math inline">\(Y\in \mathbb{R}^{n\times k}\)</span> and <span class="math inline">\(Z\in \mathbb{R}^{k\times m}\)</span> Consider the following equation <span class="math display">\[(XY)Z  = X(YZ)\]</span> When <span class="math inline">\(m = 10000\)</span>, <span class="math inline">\(n=100\)</span>, <span class="math inline">\(k=10000\)</span>, compare the two ways:</p>
+<pre class="r"><code>X &lt;- matrix(rnorm(10000*100),nrow=10000)
+Y &lt;- matrix(rnorm(100*10000),nrow=100)
+Z &lt;- matrix(rnorm(10000*100),nrow=10000)
+ptm &lt;- proc.time()
+A &lt;- (X%*%Y)%*%Z
+proc.time() - ptm</code></pre>
+<pre><code>##    user  system elapsed 
+##   12.53    0.58   13.13</code></pre>
+<pre class="r"><code>ptm &lt;- proc.time()
+A &lt;- X%*%(Y%*%Z)
+proc.time() - ptm</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.11    0.01    0.13</code></pre>
+<p>Because the second way need less operations. For details see <a href="https://en.wikipedia.org/wiki/Matrix_chain_multiplication">Matrix chain multiplication</a></p>
+</div>
+<div id="loops" class="section level3">
+<h3>Loops</h3>
+<p>Always be cautious about loops, including variables before, inside and after loops. Several tips:</p>
+<ul>
+<li>Use <strong>pre-allocation</strong> before loops instead of dynamic allocation.</li>
+<li><strong>Pre-compute</strong> some variables/matrices and keep the minimal computation inside the loops.</li>
+<li><strong>Pre-estimate</strong> the memory usage and avoid frequent I/O.</li>
+</ul>
+<p>A good reference for the course by CJ Lin: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a>. A lot of tricks have been successfully used in popular softwares such as libsvm and liblinear.</p>
 </div>
 </div>
 <div id="hardware-considerations" class="section level1">
 <h1>Hardware considerations</h1>
-<p>GPU Cluster All above discussions are about running program on single machines. When dealing with big data, parallel and distributed computing almost becomes the only choice.</p>
+<p>All above discussions are about running program on /ordinary/ machines. Here an ordinary machine means the machine most people use. Real high-performance computing can not exist without the following special facilities, since dealing with big data, parallel and distributed computing almost becomes the only choice.</p>
+<ul>
+<li>General-purpose computing on graphics processing units (GPGPU)</li>
+<li>Computer cluster</li>
+</ul>
+<p>Some people also take SSD into consideration. The shared aspect in terms of computation for above facilities is: how to reduce data transmission between high-speed computation units and low-speed storage units. For GPU try to concentrate as much computation on GPU devices, and for clusters try to do local computation as much and minimize communication between different computers especially across clusters, although you are allowed to. See <a href="http://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"><em>Numbers Everyone Should Know</em></a> by Jeff Dean.</p>
+</div>
+<div id="acknowledgement" class="section level1">
+<h1>Acknowledgement</h1>
+<p>The first time when I systematically get something related to this topic is Nov-Dec 2012, when I stayed in Bigeye lab, Tsinghua Universty. Short time as it was, I learned a lot from Dr. Pinghua Gong and other lab members.</p>
 </div>
 <div id="reference" class="section level1">
 <h1>Reference</h1>
-<p>Blog 1: <a href="http://pj.freefaculty.org/blog/?p=122">Faster R: Things to not forget</a> <a href="http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial">UFLDL Tutorial</a> <a href="https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html" class="uri">https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html</a></p>
+<p><a href="http://pj.freefaculty.org/blog/?p=122">Faster R: Things to not forget</a></p>
+<p><a href="http://www.ats.ucla.edu/stat/r/library/advanced_function_r.htm">R Library: Advanced functions</a></p>
+<p><a href="https://www.r-bloggers.com/r-tutorial-on-the-apply-family-of-functions/">R tutorial on the Apply family of functions</a></p>
+<p><a href="http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial">Stanford’s UFLDL Tutorial</a></p>
+<p><a href="https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html">Official guide of Matlab: Techniques to Improve Performance</a></p>
+<p><a href="http://uk.mathworks.com/help/matlab/matlab_prog/profiling-for-improving-performance.html"><em>Profiling</em></a> is a new feature of Matlab which can help to automatically measure where a program spends time.</p>
+<p>Blog series: <a href="https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/">Efficient Matlab</a></p>
+<p>CJ Lin’s Course: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a></p>
 </div>
 
 

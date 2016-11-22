@@ -14,10 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Motivation
 
-I always want to make my program faster. During the past years I learned some tips on high performance computing programming, but they are widespread in different specific problems. Now it is time to summarize a bit and form a reference document as a reminder for myself. And this document is continually updated as other ones in this series.
-<!---
-During the past summer I tried my best to find as more meaningful modules in weighted networks, which is comptationally intensive. See the [challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) and our [solution](https://www.synapse.org/#!Synapse:syn7136340/wiki/403063). It turned out that the optimization based approach runs slowly even on High Performance Computers such as [Bluebear](https://intranet.birmingham.ac.uk/it/teams/infrastructure/research/bear/index.aspx). Speed has become important enough to affect the prograss. After the challenge I rewrote the core part of that algorithm in C and got 10x speedup. The topic is how to make the program more efficient.
--->
+I always want to make my program faster. During the past years, I learned some tips on high performance computing programming, but they are widespread in different specific problems.
+
+In the past summer, I tried my best to find as more meaningful modules in weighted networks, which is computationally intensive. See the [challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) and our [solution](https://www.synapse.org/#!Synapse:syn7136340/wiki/403063). It turned out that the optimization based approach runs slowly even on High Performance Computers such as [Bluebear](https://intranet.birmingham.ac.uk/it/teams/infrastructure/research/bear/index.aspx). Speed has become important enough to affect the progress. After the challenge, I rewrote the core part of that algorithm in C with BLAS and got 10x+ speedup. It is a general strategy to combine C and R for a computationally intensive problem.
+
+Now it is time to summarize a bit and form a reference document as a reminder for myself. And this document is continually updated as other ones in this series, since covering wide aspects under this topic is not easy for me.
 
 # Preparing
 
@@ -58,22 +59,29 @@ long totalTime = System.currentTimeMillis() - startTime;
 
 Find the bottleneck piece first, then try to optimize it!
 
-# Language choice
+# Languages choice
 
-It is a trade-off between efficiency and easy-to-use. Machine code is the most efficient language but probably no one really want to use it. Assembly is also efficient and close to processor instructions still few want to try nowadays. They are difficult to understand for most people. Most popular languages are close to human, some of them are popular among scholars just because of easy-to-use. Both Matlab and R allow us to write code just like deriving equations. The cost is efficiency, especially when involving many direct operations on matrices and vectors. 
+It is a trade-off between efficiency and easy-to-use. Machine code is the most efficient language but probably no one really wants to use it. Assembly is also efficient and close to processor instructions still few want to try nowadays. They are difficult to understand for most people. Most popular languages are close to human, some of them are popular among scholars just because of easy-to-use. Both Matlab and R allow us to write code just like deriving equations. The cost is efficiency, especially when involving many direct operations on matrices and vectors. 
 
-A reasonable choice is to combine both low-level languages like C/C++ and high-level scripts as Matlab/R. Take computational biology for example, R has been quite popular among biostatisticians/biologists for historical reasons, and many important databases are easily accessed by R packages. We can use R to do high-level but not computational intensive jobs: data access, preprocessing, basic statisitics analaysis, files manipulation, visualization (much easier with R) ..., and leave the bottleneck jobs such as numerical optimization for C/C++. We followed this principle in the package [AMOUNTAIN](https://github.com/fairmiracle/AMOUNTAIN) in which the C-version functions are faster 10x than pure R.
+### Combine them
+A reasonable choice is to combine both low-level languages like C/C++ and high-level scripts as Matlab/R. Take computational biology for example, R has been quite popular among biostatisticians/biologists for historical reasons, and many important databases are easily accessed by R packages. We can use R to do high-level but not computational intensive jobs: data access, preprocessing, basic statistics analysis, files manipulation, visualization (much easier with R) ..., and leave the bottleneck jobs such as numerical optimization for C/C++. We followed this principle in the package [AMOUNTAIN](https://github.com/fairmiracle/AMOUNTAIN).
 
 # Always use libraries
 
 <span style="color:red">**Just because thay are faster than what you write**!</span>
 
-Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well known Basic Linear Algebra Subprograms (BLAS) are the *de facto* standard low-level routines which is much more efficient than explicit implementation. One of the multiple choices of BLAS implementations is the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl), which provides common numerical libraries for C and C++ programmers.
+Even in high efficient languages in C, it is always better to use a popular library for some calculation than implementing by yourself. Take the linear algebra operations for example, the well-known Basic Linear Algebra Subprograms (BLAS) are the *de facto* standard low-level routines which is much more efficient than explicit implementation. One of the multiple choices of BLAS implementations is the [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl), which provides common numerical libraries for C and C++ programmers.
 
-Take a simple Matrix-Vector Multiplication for example. Given a matrix $A\in \mathbb{R}^{n\times n}$ and a vector ${\bf x}\in \mathbb{R}^n$, calculate ${\bf y}=A{\bf x}$. The explicit implementation is based on the fact that $y_i=\sum_{j}A_{ij}x_j$, the C code may look like:
+BLAS routines is categorized into three levels based on the complexity:
+
+ - Level 1: vector operations, such as `axpy`, doing ${\bf y} \leftarrow \alpha{\bf x} + {\bf y}$.
+ - Level 2: matrix-vector operations, such as `gemv`, doing ${\bf y} \leftarrow \alpha A{\bf x} + \beta{\bf y}$.
+ - Level 3: matrix-matrix operations, such as `gemm`, doing $C \leftarrow \alpha AB + \beta C$.
+
+Take a simple level-2 matrix-vector multiplication for example. Given a matrix $A\in \mathbb{R}^{n\times n}$ and a vector ${\bf x}\in \mathbb{R}^n$, calculate ${\bf y}=A{\bf x}$. The explicit implementation is based on the fact that $y_i=\sum_{j}A_{ij}x_j$, the C code may look like:
 
 ```
-void mydgemv(double *A, double *x, double *y, int m, int n){
+void naivemv(double *A, double *x, double *y, int m, int n){
 	for (int i = 0; i < m; ++i)
 	{
 		double rowSum = 0;
@@ -84,7 +92,11 @@ void mydgemv(double *A, double *x, double *y, int m, int n){
 		y[i] = rowSum;
 	}
 }
-mydgemv(A, x, y1, n, n);
+int main(int argc, char const *argv[]){\
+    ...
+    naivemv(A, x, y1, n, n);
+    ...
+}
 ```
 
 It is also straightforward to call BLAS as
@@ -92,76 +104,177 @@ It is also straightforward to call BLAS as
 cblas_dgemv(CblasColMajor, CblasNoTrans, n, n, 1, A, n, x, 1, 0, y2, 1);
 ```
 
-If we measure the CPU time, the difference between two methods is obvious when the matrix is large. When n=10000, the output is:
+If we measure the CPU time, the difference between two methods is obvious when the matrix is large. When $n=10000$, the output is:
 ```
 Naive cpu time: 7.083000
 CBLAS cpu time: 0.234000
 MSE ||y1-y2||^2 between two methods: 0.000000
 ```
 
-Click [here](useBLAS.c) for full code, and to view as syntax-highlighted  [HTML](useBLAS.html).
+Click [here](useBLAS.c) for full code, and to view as syntax-highlighted [HTML](useBLAS.html). This code can be used as a starter dish to use CBLAS. A more comprehensive comparison between BLAS and non-BLAS implementations of matrix-matrix  multiplication is given by [Jacob Mattingley](https://jemnz.com/matrixmultiply.html), yes the author of [jemdoc](http://jemdoc.jaboc.net/).
 
+BLAS is further optimized from different aspects. A nice summary of commonly used math libraries can be found at [Math Libraries](https://www.chpc.utah.edu/documentation/software/mathlibraries.php). If you are using CUDA to program on NVIDIA GPU, there is also a specified library [cuBLAS](https://developer.nvidia.com/cublas).
 
-A nice summary of commonly used math libraries can be find at [Math Libraries](https://www.chpc.utah.edu/documentation/software/mathlibraries.php). The best way to study a specific library is to use it!
+The best way to study a specific library is to use it! 
 
-# Use sparse matrices if possible
+### Use sparse matrices if possible
 
-sparse representation outperforms dense representation from two aspects: speed and memory. If the matrix itself is sparse, do not forget the corresponding libraries. 
-In Matlab try the following Matrix-Vector Multiplication:
-```
-n=10000;
-A = sprand(n,n,0.01);
-x = rand(n,1);
-tic; y1=A*x; toc
-B=full(A);
-tic; y2=B*x; toc
-norm(y1-y2)
-```
-
+Sparse representation outperforms dense representation from two aspects: speed and memory usage. If the matrix itself is sparse, do not forget to use the corresponding libraries. In R we need additional 'Matrix' package. Even on GPU there are specified libraries for sparse matrix, see [cuSPARSE](https://developer.nvidia.com/cusparse). An example to use cuBLA and cuSPARSE to implement CJ Lin's NMF is available at [my github](https://github.com/fairmiracle/NMF/blob/master/NMF.cu), to view the syntax-highlighted [HTML](NMF.html).
 
 # Vectorization
 
-Almost every tutorial on Matlab or R mentioned the importance of vectorization. The principle is to avoid explicit for-loops if possible. 
+Almost every tutorial on Matlab or R would have mentioned the importance of vectorization. The principle is to avoid explicit for-loops if possible. Since there is an [official guide](https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html) and lots other resources for Matlab, the following example codes mainly use R.
 
 ### Explicit vectorization design 
-Still on Matrix-Vector Multiplication, compare the following two ways:
-```
-n=10000;
-A = sprand(n,n,0.01);
-x = rand(n,1);
-y1 = zeros(n,1);
-tic
-for i=1:n
-  for j=1:n
-    y1(i) = y1(i) + A(i,j) * x(j);
-  end
-end
-toc
-tic; y2=A*x; toc
+Still on matrix-vector Multiplication, compare the following two ways in R:
+```{r}
+n <- 1000
+A <- matrix(rnorm(n*n),nrow=n)
+x <- rnorm(n)
+y1 <- rep(0,n)
+y2 <- rep(0,n)
+ptm <- proc.time()
+for (i in seq_len(n))
+    for(j in seq_len(n))
+        y1[i] = y1[i] + A[i,j]*x[j]
+proc.time() - ptm
+ptm <- proc.time()
+y2 <- A%*%x
+proc.time() - ptm
 norm(y1-y2)
 ```
 
-But sometimes vectorization can be tricky.
-http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial
-https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html
+But sometimes vectorization can be tricky. Take the pairwise distances for example: given two vectors ${\bf x}\in \mathbb{R}^m$ and ${\bf y}\in \mathbb{R}^n$, calculate a distance matrix $D\in \mathbb{R}^{m\times n}$ where $D_{ij}=|x_i-y_j|$. Naive method comes with two `for-loops`
+```{r}
+m <- 1000
+n <- 5000
+x <- rnorm(m)
+y <- rnorm(n)
+D = matrix(0,nrow=m,ncol=n);
+ptm <- proc.time()
+for (i in seq_len(m))
+    for (j in seq_len(n))
+        D[i,j] <- (x[i] - y[j])^2;
+proc.time() - ptm
+```
+
+If we rewrite the equation $D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j$ into matrix form $D = \hat{X} + \hat{Y} - 2xy^T$, where $\hat{X}\in\mathbb{R}^{m\times n}$ is replicated from the vector ${\bf x}^2$ by $n$ columns and $\hat{Y}\in\mathbb{R}^{m\times n}$ is replicated from the vector $t({\bf y})^2$ by $m$ rows.
+$$D = \begin{bmatrix}
+ x_{11}^2&x_{12}^2  & \cdots  & x_{1n}^2\\ 
+ x_{21}^2&x_{22}^2  & \cdots  & x_{2n}^2 \\ 
+ \vdots & \vdots & \ddots  & \vdots\\ 
+ x_{m1}^2&x_{m2}^2  & \cdots  & x_{mn}^2 
+\end{bmatrix}+\begin{bmatrix}
+ y_{11}^2&y_{12}^2  & \cdots  & y_{1n}^2\\ 
+ y_{21}^2&y_{22}^2  & \cdots  & y_{2n}^2 \\ 
+ \vdots & \vdots & \ddots  & \vdots\\ 
+ y_{m1}^2&y_{m2}^2  & \cdots  & y_{mn}^2 
+\end{bmatrix}-2\begin{bmatrix}
+ x_{1}y_{1}& x_{1}y_{2} & \cdots  & x_{1}y_{n}\\ 
+ x_{2}y_{1}&x_{2}y_{2}  & \cdots  & x_{2}y_{n} \\ 
+ \vdots & \vdots & \ddots  & \vdots\\ 
+x_{m}y_{1}&x_{m}y_{2}  & \cdots  & x_{m}y_{n} 
+\end{bmatrix}$$
+
+Compare the following example with previous one:
+```{r}
+ptm <- proc.time()
+D2 <- matrix(rep(x^2,n),nrow=m) + matrix(rep(y^2,m),nrow=m,byrow=TRUE) - 2*x%*%t(y)
+proc.time() - ptm
+norm(D - D2)
+```
 
 ### Specified functions
-bxfun for Matlab,
-apply, sapply, lapply in R
-In R even `i in 1:n` is suggested to be replaced as `i in seq_len(v)`
-# Better design of logic
 
-Sometimes it needs more considerations on trivial numerical 
-A good reference for the course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/)
+We have already seen how we construct a matrix by replicating rows or columns with `rep` in R. Many specified functions in R/Matlab support vectorization well. `apply`, `sapply`, `lapply`, ... in R belong to a family that conduct vectorized operations on an array/matrix.
+
+In Matlab, the corresponding function for replicating is `repmat`. The same example in Matlab goes like:
+```
+m = 1000;
+n = 5000;
+x = rand(m,1);
+y = rand(n,1);
+D = zeros(m,n);
+tic
+for i = 1:m
+    for j = 1:n
+        D(i,j) = (x(i)-y(j))^2;
+    end
+end
+toc
+tic;D2 = repmat(x.^2,1,n) + repmat((y.^2)',m,1) - 2*x*y';toc
+```
+Output:
+```
+Elapsed time is 0.264319 seconds.
+Elapsed time is 0.066499 seconds.
+```
+In Matlab `bxfun` is the most useful function for pair-wise operations. In the pairwise distance example can be further optimized with `bxfun` by replacing `+` and `-` between matrices:
+
+```
+tic;D3 = bsxfun(@minus,bsxfun(@plus,repmat(x.^2,1,n),repmat((y.^2)',m,1)),2*x*y');toc
+```
+Output:
+```
+Elapsed time is 0.059941 seconds.
+```
+
+Again this is a dilemma between efficiency and easy-to-use: for-loops make the code more readable but severely compromise the efficiency. Efficient vectorization is not that straightforward and requires more effort.
+
+# Better design of logic
+### Orders
+Sometimes it needs more considerations on trivial numerical operations. Given three matrices $X\in \mathbb{R}^{m\times n}$, $Y\in \mathbb{R}^{n\times k}$ and $Z\in \mathbb{R}^{k\times m}$ Consider the following equation
+$$(XY)Z  = X(YZ)$$
+When $m = 10000$, $n=100$, $k=10000$, compare the two ways:
+```{r}
+X <- matrix(rnorm(10000*100),nrow=10000)
+Y <- matrix(rnorm(100*10000),nrow=100)
+Z <- matrix(rnorm(10000*100),nrow=10000)
+ptm <- proc.time()
+A <- (X%*%Y)%*%Z
+proc.time() - ptm
+ptm <- proc.time()
+A <- X%*%(Y%*%Z)
+proc.time() - ptm
+```
+Because the second way need less operations. For details see [Matrix chain multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication)
+
+### Loops
+Always be cautious about loops, including variables before, inside and after loops. Several tips:
+
+ - Use **pre-allocation** before loops instead of dynamic allocation.
+ - **Pre-compute** some variables/matrices and keep the minimal computation inside the loops.
+ - **Pre-estimate** the memory usage and avoid frequent I/O.
+
+A good reference for the course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/). A lot of tricks have been successfully  used in popular softwares such as libsvm and liblinear.
 
 # Hardware considerations
-GPU
-Cluster
-All above discussions are about running program on single machines. When dealing with big data, parallel and distributed computing almost becomes the only choice. 
+
+All above discussions are about running program on /ordinary/ machines. Here an ordinary machine means the machine most people use. Real high-performance computing can not exist without the following special facilities, since dealing with big data, parallel and distributed computing almost becomes the only choice. 
+
+ - General-purpose computing on graphics processing units (GPGPU)
+ - Computer cluster
+
+Some people also take SSD into consideration. The shared aspect in terms of computation for above facilities is: how to reduce data transmission between high-speed computation units and low-speed storage units. For GPU try to concentrate as much computation on GPU devices, and for clusters try to do local computation as much and minimize communication between different computers especially across clusters, although you are allowed to. See [*Numbers Everyone Should Know*](http://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf) by Jeff Dean.
+
+# Acknowledgement
+
+The first time when I systematically get something related to this topic is Nov-Dec 2012, when I stayed in Bigeye lab, Tsinghua Universty. Short time as it was, I learned a lot from Dr. Pinghua Gong and other lab members.
 
 # Reference
-Blog 1: [Faster R: Things to not forget](http://pj.freefaculty.org/blog/?p=122)
 
-[UFLDL Tutorial](http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial)
+[Faster R: Things to not forget](http://pj.freefaculty.org/blog/?p=122)
 
-https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html
+[R Library: Advanced functions](http://www.ats.ucla.edu/stat/r/library/advanced_function_r.htm)
+
+[R tutorial on the Apply family of functions](https://www.r-bloggers.com/r-tutorial-on-the-apply-family-of-functions/)
+
+[Stanford's UFLDL Tutorial](http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial)
+
+[Official guide of Matlab: Techniques to Improve Performance](https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html)
+
+[*Profiling*](http://uk.mathworks.com/help/matlab/matlab_prog/profiling-for-improving-performance.html) is a new feature of Matlab which can help to automatically measure where a program spends time.
+
+Blog series: [Efficient Matlab](https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/)
+
+CJ Lin's Course: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/)
