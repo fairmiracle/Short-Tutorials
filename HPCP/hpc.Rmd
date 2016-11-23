@@ -1,7 +1,7 @@
 ---
 title: "Towards High Performance Computing Programming"
 author: "Dong Li"
-date: '`r format(Sys.Date(), "%B %d, %Y")`'
+date: 'November 22, 2016'
 output:
   html_document:
     toc: true
@@ -111,15 +111,25 @@ CBLAS cpu time: 0.234000
 MSE ||y1-y2||^2 between two methods: 0.000000
 ```
 
-Click [here](useBLAS.c) for full code, and to view as syntax-highlighted [HTML](useBLAS.html). This code can be used as a starter dish to use CBLAS. A more comprehensive comparison between BLAS and non-BLAS implementations of matrix-matrix  multiplication is given by [Jacob Mattingley](https://jemnz.com/matrixmultiply.html), yes the author of [jemdoc](http://jemdoc.jaboc.net/).
+Full code, to view as syntax-highlighted HTML or for Download.
+
+ - [useBLAS.c](useBLAS.html)
+ - [Download](useBLAS.c)
+
+
+This code can be used as a starter dish to use CBLAS. A more comprehensive comparison between BLAS and non-BLAS implementations of matrix-matrix  multiplication is given by [Jacob Mattingley](https://jemnz.com/matrixmultiply.html), yes the author of [jemdoc](http://jemdoc.jaboc.net/).
 
 BLAS is further optimized from different aspects. A nice summary of commonly used math libraries can be found at [Math Libraries](https://www.chpc.utah.edu/documentation/software/mathlibraries.php). If you are using CUDA to program on NVIDIA GPU, there is also a specified library [cuBLAS](https://developer.nvidia.com/cublas).
-
+<!---
 The best way to study a specific library is to use it! 
+--->
 
 ### Use sparse matrices if possible
 
-Sparse representation outperforms dense representation from two aspects: speed and memory usage. If the matrix itself is sparse, do not forget to use the corresponding libraries. In R we need additional 'Matrix' package. Even on GPU there are specified libraries for sparse matrix, see [cuSPARSE](https://developer.nvidia.com/cusparse). An example to use cuBLA and cuSPARSE to implement CJ Lin's NMF is available at [my github](https://github.com/fairmiracle/NMF/blob/master/NMF.cu), to view the syntax-highlighted [HTML](NMF.html).
+Sparse representation outperforms dense representation from two aspects: speed and memory usage. If the matrix itself is sparse, do not forget to use the corresponding libraries. In R we need additional 'Matrix' package. Even on GPU there are specified libraries for sparse matrix, see [cuSPARSE](https://developer.nvidia.com/cusparse). Here is an example to use cuBLAS and cuSPARSE to implement CJ Lin's [Projected Gradient Methods for Non-negative Matrix Factorization](https://www.csie.ntu.edu.tw/~cjlin/nmf/), to view as syntax-highlighted HTML or for Download.
+
+ - [NMF.cu](NMF.html)
+ - [Download](NMF.cu) 
 
 # Vectorization
 
@@ -240,17 +250,15 @@ proc.time() - ptm
 Because the second way need less operations. For details see [Matrix chain multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication)
 
 ### Loops
-Always be cautious about loops, including variables before, inside and after loops. Several tips:
+We can not remove all loops as we want. Most optimization procedures are expressed as a iterative way, which means a big loop outside. Some subproblems also need iterative optimization, i.e. inner loops. Always be cautious about loops, including variables before, inside and after loops. Several tips:
 
  - Use **pre-allocation** before loops instead of dynamic allocation.
  - **Pre-compute** some variables/matrices and keep the minimal computation inside the loops.
  - **Pre-estimate** the memory usage and avoid frequent I/O.
 
-A good reference for the course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/). A lot of tricks have been successfully  used in popular softwares such as libsvm and liblinear.
-
 # Hardware considerations
 
-All above discussions are about running program on /ordinary/ machines. Here an ordinary machine means the machine most people use. Real high-performance computing can not exist without the following special facilities, since dealing with big data, parallel and distributed computing almost becomes the only choice. 
+All above discussions are about running program on *ordinary* machines. Here an ordinary machine means the machine most people use. Real high-performance computing can not exist without the following special facilities, since dealing with big data, parallel and distributed computing almost becomes the only choice. 
 
  - General-purpose computing on graphics processing units (GPGPU)
  - Computer cluster
@@ -259,7 +267,7 @@ Some people also take SSD into consideration. The shared aspect in terms of comp
 
 # Acknowledgement
 
-The first time when I systematically get something related to this topic is Nov-Dec 2012, when I stayed in Bigeye lab, Tsinghua Universty. Short time as it was, I learned a lot from Dr. Pinghua Gong and other lab members.
+The first time when I systematically got to know something related to this topic is Nov-Dec 2012, when I stayed in Bigeye lab, Tsinghua Universty. Short time as it was, I learned a lot from Dr. Pinghua Gong and other lab members.
 
 # Reference
 
@@ -277,4 +285,7 @@ The first time when I systematically get something related to this topic is Nov-
 
 Blog series: [Efficient Matlab](https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/)
 
-CJ Lin's Course: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/)
+A good course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/). A lot of tricks have been successfully  used in popular softwares such as libsvm and liblinear.
+
+--
+Last update: `r format(Sys.Date(), "%B %d, %Y")`

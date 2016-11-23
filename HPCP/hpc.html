@@ -217,12 +217,22 @@ int main(int argc, char const *argv[]){\
 <pre><code>Naive cpu time: 7.083000
 CBLAS cpu time: 0.234000
 MSE ||y1-y2||^2 between two methods: 0.000000</code></pre>
-<p>Click <a href="useBLAS.c">here</a> for full code, and to view as syntax-highlighted <a href="useBLAS.html">HTML</a>. This code can be used as a starter dish to use CBLAS. A more comprehensive comparison between BLAS and non-BLAS implementations of matrix-matrix multiplication is given by <a href="https://jemnz.com/matrixmultiply.html">Jacob Mattingley</a>, yes the author of <a href="http://jemdoc.jaboc.net/">jemdoc</a>.</p>
-<p>BLAS is further optimized from different aspects. A nice summary of commonly used math libraries can be found at <a href="https://www.chpc.utah.edu/documentation/software/mathlibraries.php">Math Libraries</a>. If you are using CUDA to program on NVIDIA GPU, there is also a specified library <a href="https://developer.nvidia.com/cublas">cuBLAS</a>.</p>
-<p>The best way to study a specific library is to use it!</p>
+<p>Full code, to view as syntax-highlighted HTML or for Download.</p>
+<ul>
+<li><a href="useBLAS.html">useBLAS.c</a></li>
+<li><a href="useBLAS.c">Download</a></li>
+</ul>
+<p>This code can be used as a starter dish to use CBLAS. A more comprehensive comparison between BLAS and non-BLAS implementations of matrix-matrix multiplication is given by <a href="https://jemnz.com/matrixmultiply.html">Jacob Mattingley</a>, yes the author of <a href="http://jemdoc.jaboc.net/">jemdoc</a>.</p>
+<p>BLAS is further optimized from different aspects. A nice summary of commonly used math libraries can be found at <a href="https://www.chpc.utah.edu/documentation/software/mathlibraries.php">Math Libraries</a>. If you are using CUDA to program on NVIDIA GPU, there is also a specified library <a href="https://developer.nvidia.com/cublas">cuBLAS</a>. <!---
+The best way to study a specific library is to use it! 
+---></p>
 <div id="use-sparse-matrices-if-possible" class="section level3">
 <h3>Use sparse matrices if possible</h3>
-<p>Sparse representation outperforms dense representation from two aspects: speed and memory usage. If the matrix itself is sparse, do not forget to use the corresponding libraries. In R we need additional ‘Matrix’ package. Even on GPU there are specified libraries for sparse matrix, see <a href="https://developer.nvidia.com/cusparse">cuSPARSE</a>. An example to use cuBLA and cuSPARSE to implement CJ Lin’s NMF is available at <a href="https://github.com/fairmiracle/NMF/blob/master/NMF.cu">my github</a>, to view the syntax-highlighted <a href="NMF.html">HTML</a>.</p>
+<p>Sparse representation outperforms dense representation from two aspects: speed and memory usage. If the matrix itself is sparse, do not forget to use the corresponding libraries. In R we need additional ‘Matrix’ package. Even on GPU there are specified libraries for sparse matrix, see <a href="https://developer.nvidia.com/cusparse">cuSPARSE</a>. Here is an example to use cuBLAS and cuSPARSE to implement CJ Lin’s <a href="https://www.csie.ntu.edu.tw/~cjlin/nmf/">Projected Gradient Methods for Non-negative Matrix Factorization</a>, to view as syntax-highlighted HTML or for Download.</p>
+<ul>
+<li><a href="NMF.html">NMF.cu</a></li>
+<li><a href="NMF.cu">Download</a></li>
+</ul>
 </div>
 </div>
 <div id="vectorization" class="section level1">
@@ -242,7 +252,7 @@ for (i in seq_len(n))
         y1[i] &lt;- y1[i] + A[i,j]*x[j]
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    1.92    0.00    1.92</code></pre>
+##    1.93    0.02    1.95</code></pre>
 <pre class="r"><code>ptm &lt;- proc.time()
 y2 &lt;- A%*%x
 proc.time() - ptm</code></pre>
@@ -262,7 +272,7 @@ for (i in seq_len(m))
         D[i,j] &lt;- (x[i] - y[j])^2;
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    9.66    0.00    9.65</code></pre>
+##    9.70    0.00    9.74</code></pre>
 <p>If we rewrite the equation <span class="math inline">\(D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j\)</span> into matrix form <span class="math inline">\(D = \hat{X} + \hat{Y} - 2xy^T\)</span>, where <span class="math inline">\(\hat{X}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\({\bf x}^2\)</span> by <span class="math inline">\(n\)</span> columns and <span class="math inline">\(\hat{Y}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\(t({\bf y}^2)\)</span> by <span class="math inline">\(m\)</span> rows. <span class="math display">\[D = \begin{bmatrix}
  x_{11}^2&amp;x_{12}^2  &amp; \cdots  &amp; x_{1n}^2\\ 
  x_{21}^2&amp;x_{22}^2  &amp; \cdots  &amp; x_{2n}^2 \\ 
@@ -284,9 +294,9 @@ x_{m}y_{1}&amp;x_{m}y_{2}  &amp; \cdots  &amp; x_{m}y_{n}
 D2 &lt;- matrix(rep(x^2,n),nrow=m) + matrix(rep(y^2,m),nrow=m,byrow=TRUE) - 2*x%*%t(y)
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.20    0.02    0.22</code></pre>
+##    0.18    0.05    0.23</code></pre>
 <pre class="r"><code>norm(D - D2)</code></pre>
-<pre><code>## [1] 1.218997e-12</code></pre>
+<pre><code>## [1] 1.943556e-12</code></pre>
 </div>
 <div id="specified-functions" class="section level3">
 <h3>Specified functions</h3>
@@ -327,28 +337,27 @@ ptm &lt;- proc.time()
 A &lt;- (X%*%Y)%*%Z
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##   12.97    0.67   13.63</code></pre>
+##   12.56    0.68   13.29</code></pre>
 <pre class="r"><code>ptm &lt;- proc.time()
 A &lt;- X%*%(Y%*%Z)
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.13    0.00    0.12</code></pre>
+##    0.11    0.02    0.13</code></pre>
 <p>Because the second way need less operations. For details see <a href="https://en.wikipedia.org/wiki/Matrix_chain_multiplication">Matrix chain multiplication</a></p>
 </div>
 <div id="loops" class="section level3">
 <h3>Loops</h3>
-<p>Always be cautious about loops, including variables before, inside and after loops. Several tips:</p>
+<p>We can not remove all loops as we want. Most optimization procedures are expressed as a iterative way, which means a big loop outside. Some subproblems also need iterative optimization, i.e. inner loops. Always be cautious about loops, including variables before, inside and after loops. Several tips:</p>
 <ul>
 <li>Use <strong>pre-allocation</strong> before loops instead of dynamic allocation.</li>
 <li><strong>Pre-compute</strong> some variables/matrices and keep the minimal computation inside the loops.</li>
 <li><strong>Pre-estimate</strong> the memory usage and avoid frequent I/O.</li>
 </ul>
-<p>A good reference for the course by CJ Lin: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a>. A lot of tricks have been successfully used in popular softwares such as libsvm and liblinear.</p>
 </div>
 </div>
 <div id="hardware-considerations" class="section level1">
 <h1>Hardware considerations</h1>
-<p>All above discussions are about running program on /ordinary/ machines. Here an ordinary machine means the machine most people use. Real high-performance computing can not exist without the following special facilities, since dealing with big data, parallel and distributed computing almost becomes the only choice.</p>
+<p>All above discussions are about running program on <em>ordinary</em> machines. Here an ordinary machine means the machine most people use. Real high-performance computing can not exist without the following special facilities, since dealing with big data, parallel and distributed computing almost becomes the only choice.</p>
 <ul>
 <li>General-purpose computing on graphics processing units (GPGPU)</li>
 <li>Computer cluster</li>
@@ -357,7 +366,7 @@ proc.time() - ptm</code></pre>
 </div>
 <div id="acknowledgement" class="section level1">
 <h1>Acknowledgement</h1>
-<p>The first time when I systematically get something related to this topic is Nov-Dec 2012, when I stayed in Bigeye lab, Tsinghua Universty. Short time as it was, I learned a lot from Dr. Pinghua Gong and other lab members.</p>
+<p>The first time when I systematically got to know something related to this topic is Nov-Dec 2012, when I stayed in Bigeye lab, Tsinghua Universty. Short time as it was, I learned a lot from Dr. Pinghua Gong and other lab members.</p>
 </div>
 <div id="reference" class="section level1">
 <h1>Reference</h1>
@@ -368,7 +377,8 @@ proc.time() - ptm</code></pre>
 <p><a href="https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html">Official guide of Matlab: Techniques to Improve Performance</a></p>
 <p><a href="http://uk.mathworks.com/help/matlab/matlab_prog/profiling-for-improving-performance.html"><em>Profiling</em></a> is a new feature of Matlab which can help to automatically measure where a program spends time.</p>
 <p>Blog series: <a href="https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/">Efficient Matlab</a></p>
-<p>CJ Lin’s Course: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a></p>
+<p>A good course by CJ Lin: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a>. A lot of tricks have been successfully used in popular softwares such as libsvm and liblinear.</p>
+<p>– Last update: November 23, 2016</p>
 </div>
 
 
