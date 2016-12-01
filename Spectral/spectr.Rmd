@@ -20,9 +20,9 @@ As a classical clustering method, spectral techniques are still promising. For m
 Before we step into spectral clustering, let's look at a simple example about clustering. Image we have a collection of two-dimensional data points looks like,
 ```{r, echo=T}
 library(mlbench)
-n = 100
-k = 2
-dat1 = mlbench.2dnormals(n, cl=k, r=sqrt(k), sd=0.7)
+n <- 100
+k <- 2
+dat1 <- mlbench.2dnormals(n, cl=k, r=sqrt(k), sd=0.7)
 plot(dat1$x,col=rep(1,n))
 ```
 
@@ -35,7 +35,7 @@ plot(dat1$x,col=dat1$classes)
 But how can we make the program know? We may need classical [K-means algorithm](https://en.wikipedia.org/wiki/K-means_clustering). The idea of k-means is quite straightforward:
 
 - 1) randomly picking $k$ nodes as centroids, 
-- 2) assign each data points to the centroids which is the most "close", 
+- 2) assign each data points to the centroids which are the most "close", 
 - 3) calculated the new centroids based on previous assignment and 
 - 4) repeat 2-3 until the centroids keep unchanged. 
 
@@ -52,10 +52,10 @@ Assigment <- function(dat,centroidids){
         #mindist <- dist(rbind(dat[i,],centroidids[1]))
         mindist <- norm(as.matrix(dat[i,]-centroidids[1]), type="F")
         for(j in 2:k){
-            currentdis = norm(as.matrix(dat[i,]-centroidids[j]), type="F")
+            currentdis <- norm(as.matrix(dat[i,]-centroidids[j]), type="F")
             if( currentdis < mindist){
-                mindist = currentdis
-                classes[i] = j
+                mindist <- currentdis
+                classes[i] <- j
             }
         }
     }
@@ -64,10 +64,10 @@ Assigment <- function(dat,centroidids){
 
 # Update centroidids given cluster labels
 Update <- function(dat,classes,k){
-    l = dim(dat)[2]
+    l <- dim(dat)[2]
     centroidids <- matrix(0, nrow=k,ncol=l)
     for(i in 1:k){
-        centroidids[i,] =  colMeans(dat[which(classes==i),])
+        centroidids[i,] <- colMeans(dat[which(classes==i),])
     }
     centroidids
 }
@@ -79,24 +79,24 @@ The basic k-means seems to work well in previous example. We can see the procedu
 #kmeansStepbyStep
 initids <- sample(n)[1:k]
 par(mfrow=c(2,2))
-cols = rep(1,n)
-plot(dat1$x,col=cols)
+cols <- rep(1,n)
+plot(dat1$x, col=cols)
 title('Initial status')
 centroidids <- dat1$x[initids,]
 classes <- Assigment(dat1$x, centroidids)
-plot(dat1$x,col=classes)
-points(centroidids, y = NULL, pch=19,cex=2,col=1:k)
+plot(dat1$x, col=classes)
+points(centroidids, y = NULL, pch=19, cex=2, col=1:k)
 title('The first assignment')
 for(i in 3:4){
     centroidids <- Update(dat1$x, classes, k)
     classes <- Assigment(dat1$x, centroidids)
-    plot(dat1$x,col=classes)
-    points(centroidids, y = NULL, pch=19,cex=2,col=1:k)
+    plot(dat1$x, col=classes)
+    points(centroidids, y = NULL, pch=19, cex=2, col=1:k)
     title(paste('The assignment procedure: ',(i-1)))
 }
 ```
 
-Kmeans algorithm is also a special form of more general model [expectation–maximization (EM) algorithm](https://en.wikipedia.org/wiki/Expectation%E2%80%93maximization_algorithm), where the E-step is the $\texttt{Assigment}$ procedure and M-step is $\texttt{Update}$ procedure. 
+Note that the above implementation of Kmeans is merely for illustration. A good implementation should consider the performance. One of the main methods to improve the performance of Kmeans is using vectorization instead of for-loops everywhere. See another [post](HPCP/hpc.html) for details about how to vectorize the distance calculation in `Assigment`. Kmeans is also a special form of more general model [expectation–maximization (EM) algorithm](https://en.wikipedia.org/wiki/Expectation%E2%80%93maximization_algorithm), where the E-step is the `Assigment` procedure and M-step is `Update` procedure. 
 
 But when the data points are not so straightforward (linearly separable), such as spirals, where k-means may fail:
 
@@ -122,7 +122,7 @@ We will see spectral clustering can work well here.
 - Find the first k eigenvectors $x_1,x_2,...x_k$ of $L$ and form the new matrix $X=[x_1x_2...x_k]\in \mathbb{R}^{n\times k}$.
 - Conduct K-means on X.
 
-Note that the affinity matrix is not always the similarity matrix $W$. For some problem we need to consider the local neighborhood relationships. k-nearest neighboor filter is a common choice:
+Note that the affinity matrix is not always the similarity matrix $W$. For some problems, we need to consider the local neighborhood relationships. k-nearest neighbour filter is a common choice:
 
 ```{r, echo=TRUE}
 #Similarity matrix is defined by Gaussian Kernel distance
@@ -184,7 +184,7 @@ title('Data points in spectral space')
 
 ## Why spectral clustering works?
 
-At the first sight we may feel amazing. Why it works? Why we pick exactly $k$ eigenvectors and why they are separable under this representation? Following the logic of [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf), the principle of explaining why Eigendecomposition can be used to do clustering is to **establish an equivalence between Eigendecomposition based procedure and clustering data points**. We only explore it from the Graph cut perspective based on normalized Laplacian.
+At the first sight, we may feel amazing. Why it works? Why we pick exactly $k$ eigenvectors and why they are separable under this representation? Following the logic of [Luxburg's Tutorial](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf), the principle of explaining why Eigendecomposition can be used to do clustering is to **establish an equivalence between Eigendecomposition based procedure and clustering data points**. We only explore it from the Graph cut perspective based on normalized Laplacian.
 
 The essence of clustering is to separate data points based on their similarities. Given the similarity graph (where nodes are data points and edges are similarities) of these points, it aims to find a partition that edges within the same cluster are dense and between different clusters are sparse. This problem has been intensively studied in graph theory.
 
@@ -196,7 +196,7 @@ But simply minimizing this metric would lead to large clusters. Several improvem
 $$Ncut(A_1,A_2,...A_k)=\sum_{i=1}^k\frac{cut(A_i,\bar{A_i})}{vol(A_i)}$$
 where $vol(A)=\sum_{i\in A,j}w_{i,j}=\sum_{i\in A}d_i$ and $d_i$ is the connectivity (degree) of $i$.
 
-Next we want to derive normalized spectral clustering as relaxation of minimizing Ncut. Considering the simplest case When $k=2$, there are only $A$ and $\bar{A}$, we define the cluster indicator $f$ (this is the key idea) as
+Next, we want to derive normalized spectral clustering as relaxation of minimizing Ncut. Considering the simplest case When $k=2$, there are only $A$ and $\bar{A}$, we define the cluster indicator $f$ (this is the key idea) as
 $$f_i=\left\{
                 \begin{array}{ll}
                   \sqrt{\frac{vol(\bar{A})}{vol(A)}}&if\quad v_i\in A\\
@@ -241,3 +241,6 @@ A close topic was given by João Neto at [Spectral Clustering](http://www.di.fc.
 A nice tutorial of spectral clustering was given by Luxburg at [A Tutorial on Spectral Clustering](http://www.cs.cmu.edu/~aarti/Class/10701/readings/Luxburg06_TR.pdf).
 
 A popular Chinese machine learning blog by pluskid also contains [spectral clustering](http://blog.pluskid.org/?p=287).
+
+--
+Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`

@@ -252,12 +252,12 @@ for (i in seq_len(n))
         y1[i] &lt;- y1[i] + A[i,j]*x[j]
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    1.93    0.02    1.95</code></pre>
+##    7.03    0.00    7.12</code></pre>
 <pre class="r"><code>ptm &lt;- proc.time()
 y2 &lt;- A%*%x
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##       0       0       0</code></pre>
+##    0.02    0.00    0.01</code></pre>
 <pre class="r"><code>norm(y1-y2)</code></pre>
 <pre><code>## [1] 0</code></pre>
 <p>But sometimes vectorization can be tricky. Take the pairwise distances for example: given two vectors <span class="math inline">\({\bf x}\in \mathbb{R}^m\)</span> and <span class="math inline">\({\bf y}\in \mathbb{R}^n\)</span>, calculate a distance matrix <span class="math inline">\(D\in \mathbb{R}^{m\times n}\)</span> where <span class="math inline">\(D_{ij}=|x_i-y_j|\)</span>. Naive method comes with two <code>for-loops</code></p>
@@ -272,7 +272,7 @@ for (i in seq_len(m))
         D[i,j] &lt;- (x[i] - y[j])^2;
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    9.70    0.00    9.74</code></pre>
+##   35.24    0.05   36.05</code></pre>
 <p>If we rewrite the equation <span class="math inline">\(D_{ij}^2=x_i^2 + y_j^2 - 2x_iy_j\)</span> into matrix form <span class="math inline">\(D = \hat{X} + \hat{Y} - 2xy^T\)</span>, where <span class="math inline">\(\hat{X}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\({\bf x}^2\)</span> by <span class="math inline">\(n\)</span> columns and <span class="math inline">\(\hat{Y}\in\mathbb{R}^{m\times n}\)</span> is replicated from the vector <span class="math inline">\(t({\bf y}^2)\)</span> by <span class="math inline">\(m\)</span> rows. <span class="math display">\[D = \begin{bmatrix}
  x_{11}^2&amp;x_{12}^2  &amp; \cdots  &amp; x_{1n}^2\\ 
  x_{21}^2&amp;x_{22}^2  &amp; \cdots  &amp; x_{2n}^2 \\ 
@@ -294,13 +294,19 @@ x_{m}y_{1}&amp;x_{m}y_{2}  &amp; \cdots  &amp; x_{m}y_{n}
 D2 &lt;- matrix(rep(x^2,n),nrow=m) + matrix(rep(y^2,m),nrow=m,byrow=TRUE) - 2*x%*%t(y)
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.18    0.05    0.23</code></pre>
+##    0.43    0.13    0.56</code></pre>
 <pre class="r"><code>norm(D - D2)</code></pre>
-<pre><code>## [1] 1.943556e-12</code></pre>
+<pre><code>## [1] 1.803002e-12</code></pre>
+<p>The distance calculation is useful when <span class="math inline">\(X\in \mathbb{R}^{n\times p}\)</span> and <span class="math inline">\(Y\in \mathbb{R}^{k\times p}\)</span>. For instance, in the <code>Assigment</code> step of <a href="../spectr.html">Kmeans algorithm</a>, we need to calculate the distances between every data points in <span class="math inline">\(X\)</span> and every centroid in <span class="math inline">\(Y\)</span> in order to find nearest centroid. <a href="https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/">Statinfer</a> suggests one line in Matlab:</p>
+<pre><code>D = bsxfun(@plus,dot(X,X,1)',dot(Y,Y,1))-2*(X'*Y);</code></pre>
+<p>The corresponding R code becomes</p>
+<pre><code>D &lt;- matrix(rep(rowSums(X*X),k),nrow=n) + matrix(rep(rowSums(Y*Y),n),nrow=n,byrow=TRUE) - 2*X%*%t(Y)
+</code></pre>
 </div>
 <div id="specified-functions" class="section level3">
 <h3>Specified functions</h3>
-<p>We have already seen how we construct a matrix by replicating rows or columns with <code>rep</code> in R. Many specified functions in R/Matlab support vectorization well. <code>apply</code>, <code>sapply</code>, <code>lapply</code>, … in R belong to a family that conduct vectorized operations on an array/matrix.</p>
+<p>We have already seen how we construct a matrix by replicating rows or columns with <code>rep</code> in R. Many specified functions in R/Matlab support vectorization well. <code>apply</code>, <code>sapply</code>, <code>lapply</code>, … in R belong to a family that conduct vectorized operations on an array/matrix. A example of using “apply” function is to find the nearest centroid for each data point in above Kmeans algorithm. After getting distance matrix <span class="math inline">\(D\)</span> between all data points in <span class="math inline">\(X\)</span> and centroids in <span class="math inline">\(Y\)</span>, the index of min value of each row of <span class="math inline">\(D\)</span> can be vectorized as</p>
+<pre><code>crspdtable &lt;- t(sapply(seq(nrow(D)), function(i) {j &lt;- which.min(D[i,])}))</code></pre>
 <p>In Matlab, the corresponding function for replicating is <code>repmat</code>. The same example in Matlab goes like:</p>
 <pre><code>m = 1000;
 n = 5000;
@@ -337,12 +343,12 @@ ptm &lt;- proc.time()
 A &lt;- (X%*%Y)%*%Z
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##   12.56    0.68   13.29</code></pre>
+##   38.39    0.38   39.19</code></pre>
 <pre class="r"><code>ptm &lt;- proc.time()
 A &lt;- X%*%(Y%*%Z)
 proc.time() - ptm</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.11    0.02    0.13</code></pre>
+##    0.34    0.01    0.35</code></pre>
 <p>Because the second way need less operations. For details see <a href="https://en.wikipedia.org/wiki/Matrix_chain_multiplication">Matrix chain multiplication</a></p>
 </div>
 <div id="loops" class="section level3">
@@ -376,9 +382,9 @@ proc.time() - ptm</code></pre>
 <p><a href="http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial">Stanford’s UFLDL Tutorial</a></p>
 <p><a href="https://www.mathworks.com/help/matlab/matlab_prog/techniques-for-improving-performance.html">Official guide of Matlab: Techniques to Improve Performance</a></p>
 <p><a href="http://uk.mathworks.com/help/matlab/matlab_prog/profiling-for-improving-performance.html"><em>Profiling</em></a> is a new feature of Matlab which can help to automatically measure where a program spends time.</p>
-<p>Blog series: <a href="https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/">Efficient Matlab</a></p>
+<p>Statinfer’s Blog series: <a href="https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/">Efficient Matlab</a></p>
 <p>A good course by CJ Lin: <a href="https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/">Numerical Methods</a>. A lot of tricks have been successfully used in popular softwares such as libsvm and liblinear.</p>
-<p>– Last update: November 23, 2016</p>
+<p>– Last update: December 01, 2016</p>
 </div>
 
 

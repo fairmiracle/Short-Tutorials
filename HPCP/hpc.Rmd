@@ -193,10 +193,22 @@ D2 <- matrix(rep(x^2,n),nrow=m) + matrix(rep(y^2,m),nrow=m,byrow=TRUE) - 2*x%*%t
 proc.time() - ptm
 norm(D - D2)
 ```
+The distance calculation is useful when $X\in \mathbb{R}^{n\times p}$ and $Y\in \mathbb{R}^{k\times p}$. For instance, in the `Assigment` step of [Kmeans algorithm](../spectr.html), we need to calculate the distances between every data points in $X$ and every centroid in $Y$ in order to find nearest centroid. [Statinfer](https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/) suggests one line in Matlab:
+```
+D = bsxfun(@plus,dot(X,X,1)',dot(Y,Y,1))-2*(X'*Y);
+```
+The corresponding R code becomes
+```
+D <- matrix(rep(rowSums(X*X),k),nrow=n) + matrix(rep(rowSums(Y*Y),n),nrow=n,byrow=TRUE) - 2*X%*%t(Y)
+
+```
 
 ### Specified functions
 
-We have already seen how we construct a matrix by replicating rows or columns with `rep` in R. Many specified functions in R/Matlab support vectorization well. `apply`, `sapply`, `lapply`, ... in R belong to a family that conduct vectorized operations on an array/matrix.
+We have already seen how we construct a matrix by replicating rows or columns with `rep` in R. Many specified functions in R/Matlab support vectorization well. `apply`, `sapply`, `lapply`, ... in R belong to a family that conduct vectorized operations on an array/matrix. A example of using "apply" function is to find the nearest centroid for each data point in above Kmeans algorithm. After getting distance matrix $D$ between all data points in $X$ and centroids in $Y$, the index of min value of each row of $D$ can be vectorized as
+```
+crspdtable <- t(sapply(seq(nrow(D)), function(i) {j <- which.min(D[i,])}))
+```
 
 In Matlab, the corresponding function for replicating is `repmat`. The same example in Matlab goes like:
 ```
@@ -283,9 +295,9 @@ The first time when I systematically got to know something related to this topic
 
 [*Profiling*](http://uk.mathworks.com/help/matlab/matlab_prog/profiling-for-improving-performance.html) is a new feature of Matlab which can help to automatically measure where a program spends time.
 
-Blog series: [Efficient Matlab](https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/)
+Statinfer's Blog series: [Efficient Matlab](https://statinfer.wordpress.com/2011/11/14/efficient-matlab-i-pairwise-distances/)
 
 A good course by CJ Lin: [Numerical Methods](https://www.csie.ntu.edu.tw/~cjlin/courses/nm2016/). A lot of tricks have been successfully  used in popular softwares such as libsvm and liblinear.
 
 --
-Last update: `r format(Sys.Date(), "%B %d, %Y")`
+Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
