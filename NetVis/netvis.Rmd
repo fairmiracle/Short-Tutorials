@@ -1,0 +1,33 @@
+---
+title: "Network visualization"
+author: "Dong Li"
+date: "4 December 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Motivation
+
+Visualization is important to modern data analysis. Network visualization provides first sight of network structure and topology. I created several pieaces of code before, now it is time to summarize a bit for frequent reference. 
+
+There are many existing tools for visualization. But sometimes we just need basic graphs and want to modify a bit or embed it in our own code. Studying a comprehensive software needs more time than expected. Currently, my favourate package is [$\mathtt{igraph}$](http://igraph.org/r/), which allows us to conduct various network analysis in R, Python and C/C++.
+
+## Weighted network visualization by $\mathtt{igraph}$
+
+Weighted network analysis is one of my main research topics. Commonly weighted network/graph means edges/links are weighted, but vertices/nodes can also have weights.  The basic requirement for visualizing such network are:
+
+  1. Edges weight should be expressed as edges width;
+  2. Vertices weight shouls be expressed as vertices size;
+  3. Edges should show direction if applicable;
+  4. Vertices should be distinguished by colors if applicable;
+  5. Labels should be attached in appropriate places;
+  6. Saved as vectorized graphics object
+  ...
+
+## Multilayer network visualization by $\mathtt{MuxViz}$
+
+Sometimes we need to plot multilayer network to graps a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. 
+
