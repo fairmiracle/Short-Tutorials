@@ -27,6 +27,7 @@ Weighted network analysis is one of my main research topics. Commonly weighted n
   6. Saved as vectorized graphics object
   ...
 
+Basic visualization may not include all these features, but should contain any if possible. 
 ## Multilayer network visualization by $\mathtt{MuxViz}$
 
 Sometimes we need to plot multilayer network to graps a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. 
