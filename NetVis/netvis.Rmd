@@ -11,31 +11,83 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Motivation
 
-Visualization is important to modern data analysis. Network visualization provides first sight of network structure and topology. I created several pieaces of code before, now it is time to summarize a bit for frequent reference. 
+Visualization is important to modern data analysis. Network visualization provides first sight of network structure and topology. I wrote several pieaces of code before, and some has been used for previous publications. Now it is time to summarize a bit for frequent reference. 
 
-There are many existing tools for visualization. But sometimes we just need basic graphs and want to modify a bit or embed it in our own code. Studying a comprehensive software needs more time than expected. Currently, my favourate package is [$\mathtt{igraph}$](http://igraph.org/r/), which allows us to conduct various network analysis in R, Python and C/C++. For visualization, it allows us to **customize** things with very little efforts. 
+There are many existing tools for visualization. But sometimes we just need basic graphs and want to modify a bit or embed it in our own way. Studying a comprehensive software needs more time than expected, not to mention installation or licence issue. Currently, my favourate package is [$\mathtt{igraph}$](http://igraph.org/r/), which allows us to conduct various network analysis in R, Python and C/C++. For visualization, it allows us to **customize** things with very little efforts. 
 
 ## Weighted network visualization by $\mathtt{igraph}$
 
-Weighted network analysis is one of my main research topics. Commonly weighted network/graph means edges/links are weighted, but vertices/nodes can also have weights.  The basic requirement for visualizing such network are:
+Weighted network analysis is one of my main research topics. Commonly weighted network/graph means edges/links are weighted, but vertices/nodes can also have weights. The basic requirement for visualizing such network are:
 
-  1. Edges weight should be expressed as edges width;
-  2. Vertices weight shouls be expressed as vertices size;
-  3. Edges should show direction if applicable;
-  4. Vertices should be distinguished by colors if applicable;
-  5. Labels should be attached in appropriate places;
-  6. Saved as vectorized graphics object
+ - 1. Edges weight should be expressed as edges width;
+ - 2. Vertices weight shouls be expressed as vertices size;
+ - 3. Edges should show direction if applicable;
+ - 4. Vertices should be distinguished by colors if applicable;
+ - 5. Labels (normally of vertices) should be attached in appropriate places;
+ - 6. Nice (or not too bad) layouts or styles can be applied;
+ - 7. Saved as vectorized graphics object for publication
   ...
 
-Basic visualization may not include all these features, but should contain any if possible. 
+Basic visualization may not include all these features, but should contain any if possible. Let us do it step by step. We have stored three variables for illustration, a gene symbol list, a node score vecor and the Pearson correlation matrix between them. The correlation matrix is computed by substracting the subset from the whole gene expression profile (GSE35103) and use `cor`, and the node score is computed based on the expression level. Here is the basic visualization with $\mathtt{igraph}$
+
+```{r}
+load('toymodule.Rdata')
+diag(w) <- 0
+w[w<0.7] <- 0
+require(igraph)
+g <- graph_from_adjacency_matrix(w,mode='undirected',weighted=T)
+plot(g)
+```
+
+We can see that simply using `plot` leads to undesired results. We need to set the parametes with more careful consideration. If we add the requirement about edges width and vertices size,
+```{r}
+plot(g,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
+```
+It looks better. Some of the parameters used for scalling the size need to be tuned further.
+
+We can change the node color or highlight some of the nodes with different color by 
+```{r}
+V(g)$color="gray"
+V(g)[which(V(g)$name=='RORC')]$color="red"
+V(g)[which(V(g)$name=='CCR6')]$color="red"
+V(g)[grep('IL17',V(g)$name)]$color="red"
+```
+
+Or save the whole picture as EPS format by the following code. 
+```{r}
+setEPS()
+postscript('conserved12h24h48h.eps',fonts=c("serif", "Palatino"))
+plot(g,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
+dev.off()
+```
+
+$\mathtt{igraph}$ also provide a simpler way to interacte with graph, one can move vertices or edges on the graph for better layout. Sometimes the labels are overlapped, `tkplot` allows us to modify it.
+```{r,eval=FALSE}
+tkplot(g,layout=layout_with_fr,canvas.width = 1000, canvas.height = 800,
+    edge.width=(abs(w/max(w)))*5,vertex.size=15*abs((g/max(g))),
+    vertex.label.dist = 0.75, vertex.label.cex = 1)
+```
+
 
 ## Multilayer network visualization by $\mathtt{MuxViz}$
 
-Sometimes we need to plot multilayer network to graps a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. 
+Sometimes we need to plot multilayer network as a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. 
 
-# Endnote
+## Interactive and Dynamic visualization 
+
+I was just about to explore it from beginning but found [this](http://curleylab.psych.columbia.edu/netviz/). I don't think I could provide a better one. But Interactive and Dynamic visualization are really important for 1000 reasons.
+
+## Endnote
 
 This document is written in R Markdown. Want to write one like this? See [Writing reproducible reports in R ](https://nicercode.github.io/guides/reports/). Or more directly, the source of generating this page is available in [netvis.Rmd](https://github.com/fairmiracle/Short-Tutorials/blob/master/NetVis/netvis.Rmd).
+
+## Find more
+
+A more detailed and fundamental tutorial on Network visualization with R.  [link](http://kateto.net/network-visualization). An earlier version in [rpubs](https://rpubs.com/kateto/netviz).
+
+A comprehensive collection of Network Visualization in R, focusing on *interactive* and *dynamic* aspects using fantastic tools. [link](http://curleylab.psych.columbia.edu/netviz/)
 
 
 --
