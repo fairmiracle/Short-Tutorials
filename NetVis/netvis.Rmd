@@ -28,20 +28,24 @@ Weighted network analysis is one of my main research topics. Commonly weighted n
  - 7. Saved as vectorized graphics object for publication
   ...
 
-Basic visualization may not include all these features, but should contain any if possible. Let us do it step by step. We have stored three variables for illustration, a gene symbol list, a node score vecor and the Pearson correlation matrix between them. The correlation matrix is computed by substracting the subset from the whole gene expression profile (GSE35103) and use `cor`, and the node score is computed based on the expression level. Here is the basic visualization with $\mathtt{igraph}$
+Basic visualization may not include all these features, but should contain any if possible. Let us do it step by step. We have stored three variables for illustration, a gene symbol list `mgenes`, a node score vecor `z` and the Pearson correlation matrix `w` between them. The correlation matrix is computed by substracting the subset from the whole gene expression profile (GSE35103) and use `cor`, and the node score  is computed based on the expression level. This toy data is available at [toymodule.Rdata](toymodule.Rdata).
+
+Here is the basic visualization with $\mathtt{igraph}$
 
 ```{r}
 load('toymodule.Rdata')
+tao <- 0.8 # threshold to cut-off correlation value. Higher tao means sparser.
 diag(w) <- 0
-w[w<0.7] <- 0
+w[w<tao] <- 0
 require(igraph)
 g <- graph_from_adjacency_matrix(w,mode='undirected',weighted=T)
 plot(g)
 ```
 
-We can see that simply using `plot` leads to undesired results. We need to set the parametes with more careful consideration. If we add the requirement about edges width and vertices size,
+It is a mass. Simply using `plot` leads to undesired results. We need to set the parametes with more careful consideration. If we add the requirement about edges width and vertices size,
 ```{r}
-plot(g,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+layout <- layout.reingold.tilford(g, circular=T)
+plot(g,layout=layout,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
 	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
 ```
 It looks better. Some of the parameters used for scalling the size need to be tuned further.
@@ -52,25 +56,25 @@ V(g)$color="gray"
 V(g)[which(V(g)$name=='RORC')]$color="red"
 V(g)[which(V(g)$name=='CCR6')]$color="red"
 V(g)[grep('IL17',V(g)$name)]$color="red"
-```
-
-Or save the whole picture as EPS format by the following code. 
-```{r}
-setEPS()
-postscript('conserved12h24h48h.eps',fonts=c("serif", "Palatino"))
-plot(g,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+plot(g,layout=layout,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
 	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
-dev.off()
 ```
 
-$\mathtt{igraph}$ also provide a simpler way to interacte with graph, one can move vertices or edges on the graph for better layout. Sometimes the labels are overlapped, `tkplot` allows us to modify it.
+A few labels are overlapped, we may need to modify it by hand. $\mathtt{igraph}$ also provide a simpler way to interacte with graph, one can move vertices or edges on the graph for better layout.
 ```{r,eval=FALSE}
 tkplot(g,layout=layout_with_fr,canvas.width = 1000, canvas.height = 800,
     edge.width=(abs(w/max(w)))*5,vertex.size=15*abs((g/max(g))),
     vertex.label.dist = 0.75, vertex.label.cex = 1)
 ```
 
-
+Or save the whole picture as EPS format by the following code. 
+```{r}
+setEPS()
+postscript('toymodule.eps',fonts=c("serif", "Palatino"))
+plot(g,layout=layout_with_fr,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
+dev.off()
+```
 ## Multilayer network visualization by $\mathtt{MuxViz}$
 
 Sometimes we need to plot multilayer network as a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. 
