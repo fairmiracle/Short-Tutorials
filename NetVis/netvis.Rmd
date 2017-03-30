@@ -33,8 +33,8 @@ Basic visualization may not include all these features, but should contain any i
 Here is the basic visualization with $\mathtt{igraph}$
 
 ```{r}
-load('toymodule.Rdata')
-tao <- 0.8 # threshold to cut-off correlation value. Higher tao means sparser.
+load('toydata.Rdata')
+tao <- 0.7 # threshold to cut-off correlation value. Higher tao means sparser.
 diag(w) <- 0
 w[w<tao] <- 0
 require(igraph)
@@ -42,35 +42,31 @@ g <- graph_from_adjacency_matrix(w,mode='undirected',weighted=T)
 plot(g)
 ```
 
-It is a mass. Simply using `plot` leads to undesired results. We need to set the parametes with more careful consideration. If we add the requirement about edges width and vertices size,
+It is a mass. Simply using `plot` leads to undesired results. We need to set the parametes with more careful consideration. If we add the requirement about edges width and vertices size, and try a specific layout,
 ```{r}
-layout <- layout.reingold.tilford(g, circular=T)
-plot(g,layout=layout,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
-	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
+plot(g,layout=layout.reingold.tilford(g,circular=T),edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),vertex.label.dist = 0.5, vertex.label.cex = 0.75)
 ```
 It looks better. Some of the parameters used for scalling the size need to be tuned further.
 
 We can change the node color or highlight some of the nodes with different color by 
 ```{r}
 V(g)$color="gray"
-V(g)[which(V(g)$name=='RORC')]$color="red"
-V(g)[which(V(g)$name=='CCR6')]$color="red"
-V(g)[grep('IL17',V(g)$name)]$color="red"
-plot(g,layout=layout,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+V(g)[which(V(g)$name=='RDX')]$color="red"
+plot(g,layout=layout_with_fr,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
 	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
 ```
 
 A few labels are overlapped, we may need to modify it by hand. $\mathtt{igraph}$ also provide a simpler way to interacte with graph, one can move vertices or edges on the graph for better layout.
 ```{r,eval=FALSE}
 tkplot(g,layout=layout_with_fr,canvas.width = 1000, canvas.height = 800,
-    edge.width=(abs(w/max(w)))*5,vertex.size=15*abs((g/max(g))),
+    edge.width=(abs(w/max(w)))*5,vertex.size=15*abs((z/max(z))),
     vertex.label.dist = 0.75, vertex.label.cex = 1)
 ```
 
 Or save the whole picture as EPS format by the following code. 
 ```{r}
 setEPS()
-postscript('toymodule.eps',fonts=c("serif", "Palatino"))
+postscript('toydata.eps',fonts=c("serif", "Palatino"))
 plot(g,layout=layout_with_fr,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
 	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
 dev.off()
@@ -92,7 +88,6 @@ This document is written in R Markdown. Want to write one like this? See [Writin
 A more detailed and fundamental tutorial on Network visualization with R.  [link](http://kateto.net/network-visualization). An earlier version in [rpubs](https://rpubs.com/kateto/netviz).
 
 A comprehensive collection of Network Visualization in R, focusing on *interactive* and *dynamic* aspects using fantastic tools. [link](http://curleylab.psych.columbia.edu/netviz/)
-
 
 --
 Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
