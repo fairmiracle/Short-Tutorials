@@ -52,7 +52,7 @@ We can change the node color or highlight some of the nodes with different color
 ```{r}
 V(g)$color="gray"
 V(g)[which(V(g)$name=='RDX')]$color="red"
-plot(g,layout=layout_with_fr,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
+plot(g,layout=layout.reingold.tilford(g,circular=T),edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
 	vertex.label.dist = 0.5, vertex.label.cex = 0.75)
 ```
 
@@ -73,7 +73,8 @@ dev.off()
 ```
 ## Multilayer network visualization by $\mathtt{MuxViz}$
 
-Sometimes we need to plot multilayer network as a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. 
+Sometimes we need to plot multilayer network as a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. The following scripts work for multi-layer co-expression network, for preparing the input files for $\mathtt{MuxViz}$.
+
 
 ## Interactive and Dynamic visualization 
 
