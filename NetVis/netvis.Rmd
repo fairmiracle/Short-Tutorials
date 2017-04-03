@@ -73,7 +73,46 @@ dev.off()
 ```
 ## Multilayer network visualization by $\mathtt{MuxViz}$
 
-Sometimes we need to plot multilayer network as a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. The following scripts work for multi-layer co-expression network, for preparing the input files for $\mathtt{MuxViz}$.
+Sometimes we need to plot multilayer network as a globle picture of multple networks and their interactions. [$\mathtt{MuxViz}$](http://muxviz.net/) provides such a platform. The following scripts work for multi-layer co-expression network, for preparing the input files [required](http://muxviz.net/tutorial.php) by $\mathtt{MuxViz}$.
+
+```{r,eval=FALSE}
+# write all node into filename
+writeNode <- function(NamesAll,filename){
+    write('nodeID nodeLabel',file=filename,append=TRUE)
+    for (i in 1:length(NamesAll)){
+        line = paste(i,NamesAll[i],sep=' ')
+        write(line,file=filename,append=TRUE)}
+}
+
+# write the edge name of matrix W into filename, with layer id
+writeEdgewithName <- function(W,filename,layerid){
+    n = dim(W)[1]
+    for (i in 1:(n-1)){
+        for (j in (i+1):n){
+            if(W[i,j]!=0){
+                line = paste(colnames(W)[i],layerid,colnames(W)[j],
+                             layerid,W[i,j],sep=' ')
+                write(line,file=filename,append=TRUE)}
+        }
+    }
+}
+
+#  write inter-layer edge name of matrix W1 and W2, with layer ids
+writeInterlayerEdgewithName <- function(W1,W2,filename,layerid1,layerid2){
+	# sharednode = intersect(colnames(W1),toupper(colnames(W2)))
+    sharednode = intersect(colnames(W1),colnames(W2))
+    for (i in 1:length(sharednode)){
+        j = which(colnames(W1)==sharednode[i])
+        k = which(colnames(W2)==sharednode[i])
+        line = paste(colnames(W1)[j],layerid1,colnames(W2)[k],layerid2,1,sep=' ')
+        write(line,file=filename,append=TRUE)
+    }
+}
+```{r}
+
+An example output:
+
+![Twolayer gene coexpression network between human and mouse](twolayer.png)
 
 
 ## Interactive and Dynamic visualization 
