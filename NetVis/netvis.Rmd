@@ -108,7 +108,7 @@ writeInterlayerEdgewithName <- function(W1,W2,filename,layerid1,layerid2){
         write(line,file=filename,append=TRUE)
     }
 }
-```{r}
+```
 
 An example output:
 
