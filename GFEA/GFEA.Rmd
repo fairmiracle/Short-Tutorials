@@ -1,5 +1,5 @@
 ---
-title: "A Practical Tutorial on Gene Functional Enrichment Analysis"
+title: "A Practical Tutorial on Gene Set Functional Enrichment Analysis"
 author: "Dong Li"
 date: 'April 25, 2017'
 output:
@@ -17,13 +17,13 @@ knitr::opts_chunk$set(echo = TRUE)
 Gene Set Enrichment Analysis ([GSEA](http://software.broadinstitute.org/gsea/index.jsp)) is a computational method that determines whether an a priori defined set of genes shows statistically significant, concordant differences between two biological states (e.g. phenotypes). GSEA has become a fundermental tool in biomedical research, which bridges the gap between algorithmic output gene set and prior knowledge, further gains the biological insight. There are various softwares implementing the idea of GSEA using different databases, here we explore some of them from a practical pointview. Before that, the conceptual part of GSEA is briefly introduced as below.
 
 # Introduction
-Here is a nice review on enrichment analysis^[Bioinformatics enrichment tools: paths toward the comprehensive functional analysis of large gene lists. *Nucleic acids research*, 2009]. According to the review, functional enrichment analysis can be categorised into three classes
+Here is a nice review on enrichment analysis^[Bioinformatics enrichment tools: paths toward the comprehensive functional analysis of large gene lists. *Nucleic acids research*, 2009.]. According to the review, functional enrichment analysis can be categorised into three classes
 
  - singular enrichment analysis (SEA)
  - gene set enrichment analysis (GSEA)
  - modular enrichment analysis (MEA)
 
-The core part is SEA, the most traditional strategy for enrichment analysis. Given a gene list, which can be differentially expressed (DE) genes or a module from a gene network, the basic idea is to compute the enrichment P-value, i.e. number of genes in the list that hit a given biology class as compared to pure random chance. Several statistical methods can be applied, including hypergeometric, binomial, chi-square, and Fisher's exact test^[Ontological analysis of gene expression data: current tools, limitations, and open problems, *Bioinformatics*, 2005]. The hypergeometric formulation is directly derived from the problem if given several genes present an enrichment. Suppose we have a gene list $L$ with length $n$, and we want to know whether $X$ genes of them are sampled from a specific GO category $G$ with length $M$. The background population size is $N$. We have the following 2x2 table:
+The core part is SEA, the most traditional strategy for enrichment analysis. Given a gene list, which can be differentially expressed (DE) genes or a module from a gene network, the basic idea is to compute the enrichment P-value, i.e. number of genes in the list that hit a given biology class as compared to pure random chance. Several statistical methods can be applied, including hypergeometric, binomial, chi-square, and Fisher's exact test^[Ontological analysis of gene expression data: current tools, limitations, and open problems, *Bioinformatics*, 2005.]. The hypergeometric formulation is directly derived from the problem if given several genes present an enrichment. Suppose we have a gene list $L$ with length $n$, and we want to know whether $X$ genes of them are sampled from a specific GO category $G$ with length $M$. The background population size is $N$. We have the following 2x2 table:
 
 |     | in category  | not in category | Total   |
 |-----+--------------+-----------------+---------|
@@ -37,7 +37,9 @@ where ${N\choose n}=\frac{N!}{k!\,(N-k)!}$ is the Binomial coefficient. The resu
 
 In other words, if none of genes in the candidate list comes from the given GO category, we have to exclude all the possibilities (from 1 to $n$), then the P-value of this Hypergeometric Test is given by
 $$p=1-\sum_{k=1}^n\frac{{M\choose k}{N-M\choose n-k}}{{N\choose n}}$$
-If the p-value $p$ is very low (less then 0.05), we can say the candidate gene list $L$ is significantly enriched by given GO category $G$.
+If the p-value $p$ is very low (less then 0.05), we can say the candidate gene list $L$ is significantly enriched by given GO category $G$. The retional keeps the same in pathway enrichment analysis, in which the GO category is replaced with known pathway.
+
+We may also need adjusted p-value by Benjamini-Hochberg (BH) method, for correction when involving multiple testing^[Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. *Journal of the Royal Statistical Society. Series B (Methodological)*, 1985.].
 
 # In practise
 
