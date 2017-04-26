@@ -14,10 +14,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Motivation
 
-Gene Set Enrichment Analysis ([GSEA](http://software.broadinstitute.org/gsea/index.jsp)) is a computational method that determines whether an a priori defined set of genes shows statistically significant, concordant differences between two biological states (e.g. phenotypes). GSEA has become a fundermental tool in biomedical research, which bridges the gap between algorithmic output gene set and prior knowledge, further gains the biological insight. There are various softwares implementing the idea of GSEA using different databases, here we explore some of them from a practical pointview. Before that, the conceptual part of GSEA is briefly introduced as below.
+Functional enrichment analysis for gene lists is a computational approach that determines whether an a priori defined set of genes are significantly associated with biological functions. It has become a fundermental tool in biomedical research, which bridges the gap between algorithmic output gene set and prior knowledge, further gains the biological insight. There are various softwares implementing functional enrichment analysis using different databases, here we explore some of them from a practical pointview. Before that, the conceptual part of functional enrichment analysis is briefly introduced as below.
 
 # Introduction
-Here is a nice review on enrichment analysis^[Bioinformatics enrichment tools: paths toward the comprehensive functional analysis of large gene lists. *Nucleic acids research*, 2009.]. According to the review, functional enrichment analysis can be categorised into three classes
+Here is a nice review on enrichment analysis^[Bioinformatics enrichment tools: paths toward the comprehensive functional analysis of large gene lists. *Nucleic acids research*, 2009.]. According to the review, enrichment tools can be categorised into three classes
 
  - singular enrichment analysis (SEA)
  - gene set enrichment analysis (GSEA)
@@ -33,15 +33,48 @@ The core part is SEA, the most traditional strategy for enrichment analysis. Giv
 
 According to the [hypergeometric distribution](https://en.wikipedia.org/wiki/Hypergeometric_distribution), the probability mass function (pmf) of random variable $X$ is given by
 $$P(X=k)=\frac{{M\choose k}{N-M\choose n-k}}{{N\choose n}}$$
-where ${N\choose n}=\frac{N!}{k!\,(N-k)!}$ is the Binomial coefficient. The result $P(X=k)$ is the probability of $X=k$.
+where ${N\choose n}=\frac{N!}{k!\,(N-k)!}$ is the Binomial coefficient. The result $P(X=k)$ is the **probability** of $X=k$.
 
 In other words, if none of genes in the candidate list comes from the given GO category, we have to exclude all the possibilities (from 1 to $n$), then the P-value of this Hypergeometric Test is given by
 $$p=1-\sum_{k=1}^n\frac{{M\choose k}{N-M\choose n-k}}{{N\choose n}}$$
-If the p-value $p$ is very low (less then 0.05), we can say the candidate gene list $L$ is significantly enriched by given GO category $G$. The retional keeps the same in pathway enrichment analysis, in which the GO category is replaced with known pathway.
+If the p-value $p$ is very low (less than the alpha level 0.05), we can say the candidate gene list $L$ is significantly enriched by given GO category $G$. The retional keeps the same in pathway enrichment analysis, in which the GO category is replaced with known pathway.
 
-We may also need adjusted p-value by Benjamini-Hochberg (BH) method, for correction when involving multiple testing^[Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. *Journal of the Royal Statistical Society. Series B (Methodological)*, 1985.].
+[Bonferroni correction](https://en.wikipedia.org/wiki/Bonferroni_correction) p-value is used when multiple hypotheses are tested. The goal is to maintain the propability of false find any significant hypothesis at the alpha level^[GO::TermFinder—open source software for accessing Gene Ontology information and finding significantly enriched Gene Ontology terms associated with a list of genes. *Bioinformatics*, 2004.]. If we have $m$ hypotheses, Bonferroni correction p-value is simply alpha value divided by $m$. We may also need adjusted p-value by Benjamini-Hochberg (BH) method for correction^[Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. *Journal of the Royal Statistical Society. Series B (Methodological)*, 1995.].
 
-# In practise
+# Enrichment analysis in practise
+## Basic analysis
+Assume we have a gene list $selected$, the population list $universe$, the basic question: are these genes more often in the GO category (BP = Biological process; CC = Cellular component; MF = Molecular function) than expected by chance? Hypergeometric is used like:
+```{r}
+library(Category)
+library(GOstats)
+params = new("GOHyperGParams", geneIds=selected,
+  universeGeneIds=universe, annotation=annotation(bcrneg_filt),
+  ontology="BP", pvalueCutoff=0.001,
+  conditional=FALSE, testDirection="over")
+(overRepresented = hyperGTest(params))
+```
+The complete example comes from [Martin Morgan](http://www.bioconductor.org/help/course-materials/2009/SSCMay09/gsea).
+
+## Integrative anaysis
+Powerful web-based enrichment analysis tools such as DAVID, Enrichr, GeneMANIA, Metascape, all support uploading gene list and return the result page with colorful plots and nice figures. There are wide range of databases for annotation and complicated algorithms behind each of them. Instead of introducing the web-based functions in details, here we conduct a simple case study using a programatic approach, which is more efficient when there are hundreds of gene lists to deal with. Take [DAVID Web Service](https://david.ncifcrf.gov/content.jsp?file=WS.html), the url-based DAVID API allows users to programatically acess to DAVID as in the website and save the result locally. The following scrip works with *RDAVIDWebService* package.
+```{r,eval=FALSE}
+library("RDAVIDWebService")
+Haspgenelist <- readLines(xxfilename)
+# replace xxx with your registered email
+david <- DAVIDWebService(email=xxx,url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
+result <- addList(david, Haspgenelist,idType="ENTREZ_GENE_ID",listName="genelist",listType="Gene")
+setAnnotationCategories(david, c("GOTERM_BP_ALL","GOTERM_MF_ALL", "GOTERM_CC_ALL"))
+termCluster <- getClusterReport(david, type="Term")
+if (length(row.names(summary(termCluster))) > 0){
+	getClusterReportFile(david, type="Term","termClusterReport_dmel.tab")
+	sample.dataframe <- read.csv(fileName,header=F,sep='\t')
+}
+
+```
+If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop.
+
+# Endnote
+Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background people.
 
 --
 Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
