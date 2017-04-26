@@ -74,7 +74,7 @@ if (length(row.names(summary(termCluster))) > 0){
 If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop.
 
 # Endnote
-Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally, the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background people.
+Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally, the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background guy. The question remains as where are the bounderies of a [interdisciplinary](https://en.wikipedia.org/wiki/Interdisciplinarity) field located?
 
 --
 Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
