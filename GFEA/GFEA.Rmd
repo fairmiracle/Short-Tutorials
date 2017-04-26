@@ -52,8 +52,9 @@ params = new("GOHyperGParams", geneIds=selected,
   ontology="BP", pvalueCutoff=0.001,
   conditional=FALSE, testDirection="over")
 (overRepresented = hyperGTest(params))
+head(summary(overRepresented))
 ```
-The complete example comes from [Martin Morgan](http://www.bioconductor.org/help/course-materials/2009/SSCMay09/gsea).
+A more complete example comes from [Martin Morgan](http://www.bioconductor.org/help/course-materials/2009/SSCMay09/gsea).
 
 ## Integrative anaysis
 Powerful web-based enrichment analysis tools such as DAVID, Enrichr, GeneMANIA, Metascape, all support uploading gene list and return the result page with colorful plots and nice figures. There are wide range of databases for annotation and complicated algorithms behind each of them. Instead of introducing the web-based functions in details, here we conduct a simple case study using a programatic approach, which is more efficient when there are hundreds of gene lists to deal with. Take [DAVID Web Service](https://david.ncifcrf.gov/content.jsp?file=WS.html), the url-based DAVID API allows users to programatically acess to DAVID as in the website and save the result locally. The following scrip works with *RDAVIDWebService* package.
@@ -71,7 +72,7 @@ if (length(row.names(summary(termCluster))) > 0){
 }
 
 ```
-If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop.
+If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop. And all final report plain files can be integrated into one file if necessary.
 
 # Endnote
 Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally, the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background guy. The question remains as where are the bounderies of a [interdisciplinary](https://en.wikipedia.org/wiki/Interdisciplinarity) field located?
