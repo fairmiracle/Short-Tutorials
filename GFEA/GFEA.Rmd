@@ -43,32 +43,70 @@ If the p-value $p$ is very low (less than the alpha level 0.05), we can say the 
 
 # Enrichment analysis in practise
 ## Basic analysis
-Assume we have a gene list $selected$, the population list $universe$, the basic question: are these genes more often in the GO category (BP = Biological process; CC = Cellular component; MF = Molecular function) than expected by chance? Hypergeometric is used like:
-```{r}
-library(Category)
-library(GOstats)
-params = new("GOHyperGParams", geneIds=selected,
-  universeGeneIds=universe, annotation=annotation(bcrneg_filt),
-  ontology="BP", pvalueCutoff=0.001,
-  conditional=FALSE, testDirection="over")
-(overRepresented = hyperGTest(params))
-head(summary(overRepresented))
+Take the Affymetrix Human Genome U95 Set annotation data (chip hgu95av2) for example. Assume we have a gene list $prbs$, the population list $univ$, the basic question: are these genes more often in the GO category (BP = Biological process; CC = Cellular component; MF = Molecular function) than expected by chance? Hypergeometric in package *GOstats* is used like:
+```{r, message=FALSE, warning=FALSE}
+## Fake up some data
+library("hgu95av2.db")
+library("annotate")
+library("GOstats")
+
+prbs <- ls(hgu95av2GO)[1:300]
+## Only those with GO ids
+hasGO <- sapply(mget(prbs, hgu95av2GO), function(ids)
+if(!is.na(ids) && length(ids) > 1) TRUE else FALSE)
+prbs <- prbs[hasGO]
+prbs <- getEG(prbs, "hgu95av2")
+## remove duplicates, but keep named vector
+prbs <- prbs[!duplicated(prbs)]
+## do the same for universe
+univ <- ls(hgu95av2GO)[1:5000]
+hasUnivGO <- sapply(mget(univ, hgu95av2GO), function(ids)
+if(!is.na(ids) && length(ids) > 1) TRUE else FALSE)
+univ <- univ[hasUnivGO]
+univ <- unique(getEG(univ, "hgu95av2"))
+
+p <- new("GOHyperGParams", geneIds=prbs, universeGeneIds=univ,
+         ontology="BP", annotation="hgu95av2", conditional=TRUE)
+
+## this part takes time...
+hyp <- hyperGTest(p)
+head(summary(hyp))
 ```
-A more complete example comes from [Martin Morgan](http://www.bioconductor.org/help/course-materials/2009/SSCMay09/gsea).
+A another complete example comes from [Martin Morgan](http://www.bioconductor.org/help/course-materials/2009/SSCMay09/gsea).
 
 ## Integrative anaysis
-Powerful web-based enrichment analysis tools such as DAVID, Enrichr, GeneMANIA, Metascape, all support uploading gene list and return the result page with colorful plots and nice figures. There are wide range of databases for annotation and complicated algorithms behind each of them. Instead of introducing the web-based functions in details, here we conduct a simple case study using a programatic approach, which is more efficient when there are hundreds of gene lists to deal with. Take [DAVID Web Service](https://david.ncifcrf.gov/content.jsp?file=WS.html), the url-based DAVID API allows users to programatically acess to DAVID as in the website and save the result locally. The following scrip works with *RDAVIDWebService* package.
+Powerful web-based enrichment analysis tools such as DAVID, Enrichr, GeneMANIA, Metascape, all support uploading gene list and return the result page with colorful plots and nice figures. There are wide range of databases for annotation and complicated algorithms behind each of them. Instead of introducing the web-based functions in details, here we conduct a simple case study using a programatic approach, which is more efficient when there are hundreds of gene lists to deal with. Take [DAVID Web Service](https://david.ncifcrf.gov/content.jsp?file=WS.html), the url-based DAVID API allows users to programatically acess to DAVID as in the website and save the result locally. The following scrip works with [*RDAVIDWebService*](https://bioconductor.org/packages/release/bioc/html/RDAVIDWebService.html) package.
 ```{r,eval=FALSE}
 library("RDAVIDWebService")
-Haspgenelist <- readLines(xxfilename)
+Haspgenelist <- readLines("xxfilename")
 # replace xxx with your registered email
 david <- DAVIDWebService(email=xxx,url="https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap12Endpoint/")
-result <- addList(david, Haspgenelist,idType="ENTREZ_GENE_ID",listName="genelist",listType="Gene")
+result <- addList(david, Haspgenelist,idType="ENTREZ_GENE_ID",
+                  listName="genelist",listType="Gene")
 setAnnotationCategories(david, c("GOTERM_BP_ALL","GOTERM_MF_ALL", "GOTERM_CC_ALL"))
 termCluster <- getClusterReport(david, type="Term")
 if (length(row.names(summary(termCluster))) > 0){
-	getClusterReportFile(david, type="Term","termClusterReport_dmel.tab")
+	getClusterReportFile(david,type="Term",
+	                     "termClusterReport_dmel.tab")
 	sample.dataframe <- read.csv(fileName,header=F,sep='\t')
+	
+  for (funclust in 1:length(row.names(summary(termCluster)))) {
+    pdf(file=paste('FunctionalCluster_dmel_',funclust,'.pdf',
+                 sep=""),compress=FALSE)
+    print(plot2D(termCluster, funclust))
+    dev.off()
+	
+    davidGODag <- DAVIDGODag(members(termCluster)[[funclust]],
+                           pvalueCutoff=0.1, "CC")
+    if (numNodes(goDag(davidGODag))>0){
+      pdf(file=paste(prefix,'GeneOntologyFunctionalCluster',
+                     funclust,'.pdf',sep=""))
+	    print(plotGOTermGraph(g=goDag(davidGODag),r=davidGODag,
+	                        max.nchar=40, node.shape="ellipse"))
+	    dev.off()
+    }
+  }
+
 }
 
 ```
