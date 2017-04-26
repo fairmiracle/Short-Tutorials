@@ -14,10 +14,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Motivation
 
-Functional enrichment analysis for gene lists is a computational approach that determines whether an a priori defined set of genes are significantly associated with biological functions. It has become a fundermental tool in biomedical research, which bridges the gap between algorithmic output gene set and prior knowledge, further gains the biological insight. There are various softwares implementing functional enrichment analysis using different databases, here we explore some of them from a practical pointview. Before that, the conceptual part of functional enrichment analysis is briefly introduced as below.
+Functional enrichment analysis for gene lists is a computational approach that determines whether an a priori defined set of genes are significantly associated with biological functions. It has become a fundamental tool in biomedical research, which bridges the gap between algorithmic output gene set and prior knowledge, further gains the biological insight. There are various softwares implementing functional enrichment analysis using different databases, here we explore some of them from a practical pointview. Before that, the conceptual part of functional enrichment analysis is briefly introduced as below.
 
 # Introduction
-Here is a nice review on enrichment analysis^[Bioinformatics enrichment tools: paths toward the comprehensive functional analysis of large gene lists. *Nucleic acids research*, 2009.]. According to the review, enrichment tools can be categorised into three classes
+Here is a nice review on enrichment analysis^[Bioinformatics enrichment tools: paths toward the comprehensive functional analysis of large gene lists. *Nucleic acids research*, 2009.]. According to the review, enrichment tools can be categorized into three classes
 
  - singular enrichment analysis (SEA)
  - gene set enrichment analysis (GSEA)
@@ -35,11 +35,11 @@ According to the [hypergeometric distribution](https://en.wikipedia.org/wiki/Hyp
 $$P(X=k)=\frac{{M\choose k}{N-M\choose n-k}}{{N\choose n}}$$
 where ${N\choose n}=\frac{N!}{k!\,(N-k)!}$ is the Binomial coefficient. The result $P(X=k)$ is the **probability** of $X=k$.
 
-In other words, if none of genes in the candidate list comes from the given GO category, we have to exclude all the possibilities (from 1 to $n$), then the P-value of this Hypergeometric Test is given by
+In other words, if none of the genes in the candidate list comes from the given GO category, we have to exclude all the possibilities (from 1 to $n$), then the P-value of this Hypergeometric Test is given by
 $$p=1-\sum_{k=1}^n\frac{{M\choose k}{N-M\choose n-k}}{{N\choose n}}$$
-If the p-value $p$ is very low (less than the alpha level 0.05), we can say the candidate gene list $L$ is significantly enriched by given GO category $G$. The retional keeps the same in pathway enrichment analysis, in which the GO category is replaced with known pathway.
+If the p-value $p$ is very low (less than the alpha level 0.05), we can say the candidate gene list $L$ is significantly enriched by given GO category $G$. The rational keeps the same in pathway enrichment analysis, in which the GO category is replaced with a known pathway.
 
-[Bonferroni correction](https://en.wikipedia.org/wiki/Bonferroni_correction) p-value is used when multiple hypotheses are tested. The goal is to maintain the propability of false find any significant hypothesis at the alpha level^[GO::TermFinder—open source software for accessing Gene Ontology information and finding significantly enriched Gene Ontology terms associated with a list of genes. *Bioinformatics*, 2004.]. If we have $m$ hypotheses, Bonferroni correction p-value is simply alpha value divided by $m$. We may also need adjusted p-value by Benjamini-Hochberg (BH) method for correction^[Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. *Journal of the Royal Statistical Society. Series B (Methodological)*, 1995.].
+[Bonferroni correction](https://en.wikipedia.org/wiki/Bonferroni_correction) p-value is used when multiple hypotheses are tested. The goal is to maintain the probability of false find any significant hypothesis at the alpha level^[GO::TermFinder—open source software for accessing Gene Ontology information and finding significantly enriched Gene Ontology terms associated with a list of genes. *Bioinformatics*, 2004.]. If we have $m$ hypotheses, Bonferroni correction p-value is simply alpha value divided by $m$. We may also need adjusted p-value by Benjamini-Hochberg (BH) method for correction^[Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. *Journal of the Royal Statistical Society. Series B (Methodological)*, 1995.].
 
 # Enrichment analysis in practise
 ## Basic analysis
@@ -74,7 +74,7 @@ if (length(row.names(summary(termCluster))) > 0){
 If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop.
 
 # Endnote
-Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background people.
+Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally, the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background people.
 
 --
 Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
