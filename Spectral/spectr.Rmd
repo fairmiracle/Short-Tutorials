@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Motivation
-Recently we read a [Nature paper](http://science.sciencemag.org/content/353/6295/163) which adopts spectral clustering as the main method to find higher-order connectivity patterns. The efficiency and scalability of their algorithm are impressive. And We also found that the best player in this year's [Disease Module Identification DREAM Challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) uses spectral clustering as one of their main techniques to identify modules, which achieved the best overall performance at all FDR levels. Check their write-up: [A Double Spectral Approach to DREAM 11 Subchallenge 3](https://www.synapse.org/#!Synapse:syn7349492/wiki/407359).
+Recently we read a [Science paper](http://science.sciencemag.org/content/353/6295/163) which adopts spectral clustering as the main method to find higher-order connectivity patterns. The efficiency and scalability of their algorithm are impressive. And We also found that the best player in this year's [Disease Module Identification DREAM Challenge](https://www.synapse.org/#!Synapse:syn6156761/wiki/400645) uses spectral clustering as one of their main techniques to identify modules, which achieved the best overall performance at all FDR levels. Check their write-up: [A Double Spectral Approach to DREAM 11 Subchallenge 3](https://www.synapse.org/#!Synapse:syn7349492/wiki/407359).
 
 As a classical clustering method, spectral techniques are still promising. For many people including me, the basic questions remain as: what is spectral clustering and why it works?
 
