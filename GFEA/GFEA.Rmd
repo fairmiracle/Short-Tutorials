@@ -43,12 +43,11 @@ If the p-value $p$ is very low (less than the alpha level 0.05), we can say the 
 
 # Enrichment analysis in practise
 ## Basic analysis
-Take the Affymetrix Human Genome U95 Set annotation data (chip hgu95av2) for example. Assume we have a gene list $prbs$, the population list $univ$, the basic question: are these genes more often in the GO category (BP = Biological process; CC = Cellular component; MF = Molecular function) than expected by chance? Hypergeometric in package *GOstats* is used like:
+Take the Affymetrix Human Genome U95 Set annotation data (chip hgu95av2) for example. Assume we have a gene list $prbs$, the population list $univ$. Each entry in both vector represent a gene  Entrez-ID. 
 ```{r, message=FALSE, warning=FALSE}
 ## Fake up some data
 library("hgu95av2.db")
 library("annotate")
-library("GOstats")
 
 prbs <- ls(hgu95av2GO)[1:300]
 ## Only those with GO ids
@@ -64,7 +63,13 @@ hasUnivGO <- sapply(mget(univ, hgu95av2GO), function(ids)
 if(!is.na(ids) && length(ids) > 1) TRUE else FALSE)
 univ <- univ[hasUnivGO]
 univ <- unique(getEG(univ, "hgu95av2"))
+head(prbs)
+head(univ)
+```
 
+The basic question: are these genes more often in the GO category (BP = Biological process; CC = Cellular component; MF = Molecular function) than expected by chance? Hypergeometric in package *GOstats* is used like:
+```{r}
+library("GOstats")
 p <- new("GOHyperGParams", geneIds=prbs, universeGeneIds=univ,
          ontology="BP", annotation="hgu95av2", conditional=TRUE)
 
@@ -75,7 +80,7 @@ head(summary(hyp))
 A another complete example comes from [Martin Morgan](http://www.bioconductor.org/help/course-materials/2009/SSCMay09/gsea).
 
 ## Integrative anaysis
-Powerful web-based enrichment analysis tools such as DAVID, Enrichr, GeneMANIA, Metascape, all support uploading gene list and return the result page with colorful plots and nice figures. There are wide range of databases for annotation and complicated algorithms behind each of them. Instead of introducing the web-based functions in details, here we conduct a simple case study using a programatic approach, which is more efficient when there are hundreds of gene lists to deal with. Take [DAVID Web Service](https://david.ncifcrf.gov/content.jsp?file=WS.html), the url-based DAVID API allows users to programatically acess to DAVID as in the website and save the result locally. The following scrip works with [*RDAVIDWebService*](https://bioconductor.org/packages/release/bioc/html/RDAVIDWebService.html) package.
+Powerful web-based enrichment analysis tools such as DAVID, Enrichr, GeneMANIA, Metascape, all support uploading gene list and return the result page with colorful plots and nice figures. There are wide range of databases for annotation and complicated algorithms behind each of them. Instead of introducing the web-based functions in details, here we conduct a simple case study using a programatic approach, which is more efficient when there are hundreds of gene lists to deal with. Take [DAVID Web Service](https://david.ncifcrf.gov/content.jsp?file=WS.html) for example, the url-based DAVID API allows users to programatically acess to DAVID as in the website and save the result locally. The following scrip works with [*RDAVIDWebService*](https://bioconductor.org/packages/release/bioc/html/RDAVIDWebService.html) package.
 ```{r,eval=FALSE}
 library("RDAVIDWebService")
 Haspgenelist <- readLines("xxfilename")
@@ -99,7 +104,7 @@ if (length(row.names(summary(termCluster))) > 0){
     davidGODag <- DAVIDGODag(members(termCluster)[[funclust]],
                            pvalueCutoff=0.1, "CC")
     if (numNodes(goDag(davidGODag))>0){
-      pdf(file=paste(prefix,'GeneOntologyFunctionalCluster',
+        pdf(file=paste('GeneOntologyFunctionalCluster',
                      funclust,'.pdf',sep=""))
 	    print(plotGOTermGraph(g=goDag(davidGODag),r=davidGODag,
 	                        max.nchar=40, node.shape="ellipse"))
@@ -113,7 +118,9 @@ if (length(row.names(summary(termCluster))) > 0){
 If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop. And all final report plain files can be integrated into one file if necessary.
 
 # Endnote
-Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally, the analysis can provide some useful insights and guidance for follow-up experiments. But it would be the last step for a CS background guy. The question remains as where are the bounderies of a [interdisciplinary](https://en.wikipedia.org/wiki/Interdisciplinarity) field located?
+Functional enrichment analysis is probably only the first step of the complete explanation of the result gene lists, which needs more sound and detailed description about related functions. Ideally, the analysis can provide some useful insights and guidance for follow-up experiments. 
+
+<!--But it would be the last step for a CS background guy. The question still remains as, where are the bounderies of a [interdisciplinary](https://en.wikipedia.org/wiki/Interdisciplinarity) research field located?-->
 
 --
 Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
