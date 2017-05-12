@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "Using AMOUNTAIN step by step"
 author: "Dong Li"
 date: "12 May 2017"
 output: BiocStyle::html_document
@@ -20,7 +20,7 @@ This document shows how to use [AMOUNTAIN]http://bioconductor.org/packages/relea
 # Data preparation
 
 We start by downloading the expression data from GEO database. We use a `GEO2R` style:
-```{r,eval=F}
+```{r,eval=FALSE}
 library(Biobase)
 library(GEOquery)
 library(limma)
@@ -50,7 +50,7 @@ if (LogC) { ex[which(ex <= 0)] <- NaN
 ```
 
 The nodes scores are calculated by the expression level, which can be accomplished by the `limma` package.
-```{r}
+```{r,eval=FALSE}
 # set up the data and proceed with analysis
 sml <- paste("G", sml, sep="")    # set group names
 fl <- as.factor(sml)
@@ -80,7 +80,7 @@ W[W<0] <- 0
 # Modules identification
 
 As we want to identify multiple modules, we use the module extraction way,
-```{r}
+```{r,eval=FALSE}
 ModulesAmoutain <- function(W,z,lambdav,Nmodule,savefile,minsize,maxsize){
 	savefile1 = paste(savefile,'Atom',sep = '')
 	N = dim(W)[1]
@@ -123,7 +123,7 @@ ModulesAmoutain(W,z,1,100,savefile,50,500)
 
 # Enrichment analysis
 Here is another document talking about [functional enrichment analysis](http://www.cs.bham.ac.uk/~dxl466/st/GFEA.html). In order to check whether there are more known interactions in the modules, we use the resources from the STRING databases. The `STRINGdb` package makes it easy to access results programmatically.
-```{r}
+```{r,eval=FALSE}
 fhead = '50500'
 dir.create(fhead, showWarnings = TRUE, recursive = FALSE, mode = "0777")
 rlines=readLines(savefile)
@@ -180,7 +180,7 @@ write.table(moduleppiscore,file=paste(fhead,"/ppienrichmentstats.txt",sep=''),
 length(which(moduleppiscore[,1]<0.05))
 ```
 
-Here is the enrichment result file
+Here is the enrichment result file [Enrichment.xlsx](http://www.cs.bham.ac.uk/~dxl466/st/Enrichment.xlsx).
 We can see that module are enriched by the , and module are enriched by the , which are consistent with the conclusion from the original study. Moreover, the modules provide
 
 Finally, if we need to visualize certain modules, package `igraph` can be useful. Here is an [exmaple](http://www.cs.bham.ac.uk/~dxl466/st/netvis/netvis.html) how to plot weighted networks.
