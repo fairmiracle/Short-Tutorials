@@ -117,15 +117,13 @@ if (length(row.names(summary(termCluster))) > 0){
 ```
 If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop. And all final report plain files can be integrated into one file if necessary.
 
-Recently I was trying to figure out what are the essential chararistics of the active modules with maxiaml summed gene expression level and correlation, which where identified by the package [AMOUNTAIN](http://bioconductor.org/packages/AMOUNTAIN) from weighted gene co-expression networks. Searching for known interactions inside a module might be a good idea. The package [STRINGdb](http://bioconductor.org/packages/STRINGdb) provide a set of API to access the resources of STRING by an effective way. Given a gene symbol list `mgenes` from homo sapiens, the following code works out ppi enrichment p-value and signigicantly enriched GO terms.
+Recently I was trying to figure out what are the essential chararistics of the active modules with maxiaml summed gene expression level and correlation, which where identified by the package [AMOUNTAIN](http://bioconductor.org/packages/AMOUNTAIN) from weighted gene co-expression networks. Searching for known interactions inside a module might be a good idea. The package [STRINGdb](http://bioconductor.org/packages/STRINGdb) provide a set of API to access the resources of STRING by an effective way. Given a gene set `mgenes` (the column "gene" is the symbol list) from homo sapiens, the following code works out ppi enrichment p-value and signigicantly enriched GO terms.
 ```{r,eval=FALSE}
 library(STRINGdb)
 string_db <- STRINGdb$new( version="10", species=9606,
 score_threshold=0, input_directory="" )
  	# access STRING
-diff_exp_genes <- data.frame(mgenes,mgenes)
-colnames(diff_exp_genes)<-c('gene','backup')
-genes_mapped <- string_db$map(diff_exp_genes, "gene",
+genes_mapped <- string_db$map(mgenes, "gene",
                               removeUnmappedRows = TRUE )
 hits <- genes_mapped$STRING_id
 # the ppiscore indicates whether there are signigicantly more interactions inside the module than exprected
@@ -134,7 +132,6 @@ ppiscore <- string_db$get_ppi_enrichment(hits)$enrichment
 # er lists all signigicantly enriched GO terms
 er <- string_db$get_enrichment(hits)
 er<-er[which(er$pvalue_fdr<0.05),]
-
 ```
 
 # Endnote
