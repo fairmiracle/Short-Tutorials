@@ -68,11 +68,10 @@ head(univ)
 ```
 
 The basic question: are these genes more often in the GO category (BP = Biological process; CC = Cellular component; MF = Molecular function) than expected by chance? Hypergeometric in package *GOstats* is used like:
-```{r}
+```{r,message=FALSE, warning=FALSE}
 library("GOstats")
 p <- new("GOHyperGParams", geneIds=prbs, universeGeneIds=univ,
          ontology="BP", annotation="hgu95av2", conditional=TRUE)
-
 ## this part takes time...
 hyp <- hyperGTest(p)
 head(summary(hyp))
@@ -113,7 +112,6 @@ if (length(row.names(summary(termCluster))) > 0){
   }
 
 }
-
 ```
 If there are several gene lists, each stored in a plain file, the above code can be wrapped with a `for` loop. And all final report plain files can be integrated into one file if necessary.
 
