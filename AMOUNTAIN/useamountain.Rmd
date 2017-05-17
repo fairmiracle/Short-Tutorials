@@ -210,12 +210,36 @@ In addition, there are 8 KEGG pathways are enriched by the first module with FDR
 |03040|	Spliceosome	|4|	0.0402|
 Table 1: KEGG pathways enriched by Module 1 identified from weighted co-expression network (GSE25101).
 
+<!--
+## Comparison with WGCNA
+
+   Power   SFT.R.sq      slope truncated.R.sq     mean.k.    median.k.     max.k.
+1      1 0.09482105  1.0745494      0.9541591 4007.450641 3974.4987585 6173.15836
+2      2 0.15558357 -0.7288135      0.9527626 1366.981561 1295.7085865 3038.67291
+3      3 0.56833094 -1.3558185      0.9744922  582.248581  512.9854480 1775.29393
+4      4 0.74468101 -1.6419304      0.9827460  285.758469  229.7364949 1144.63570
+5      5 0.81429124 -1.7822510      0.9848310  154.982070  112.1189137  787.31585
+6      6 0.84307965 -1.8658222      0.9829521   90.569360   58.7297370  566.94883
+7      7 0.87371626 -1.8799607      0.9899281   56.087965   32.6719482  422.51843
+8      8 0.88742915 -1.8898619      0.9905894   36.384025   19.0869170  323.74432
+9      9 0.89884964 -1.8890582      0.9923806   24.516152   11.5110893  253.65998
+10    10 0.90389596 -1.8864734      0.9934647   17.051482    7.1598485  202.27419
+11    12 0.91983297 -1.8485435      0.9968643    8.907480    2.9725236  134.16031
+12    14 0.92698312 -1.8174811      0.9972499    5.045076    1.3096149   93.04910
+13    16 0.93002149 -1.7915827      0.9968230    3.042637    0.6280683   67.31261
+14    18 0.93173279 -1.7723191      0.9947534    1.929683    0.3145452   50.07768
+15    20 0.92937132 -1.7551762      0.9941313    1.275479    0.1640478   38.10784
+
+-->
+
 # Endnote
 
 Additional files:
+
+Module genes:
 [modulegenes.txt](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/modulegenes.txt)
 
-Details of enrichment results: [Enrichment.xlsx](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/Enrichment.xlsx)
+Details of enrichment analysis: [Enrichment.xlsx](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/Enrichment.xlsx)
 
 All source code:
 [useAMOUNTAIN.R](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/useAMOUNTAIN.R)
