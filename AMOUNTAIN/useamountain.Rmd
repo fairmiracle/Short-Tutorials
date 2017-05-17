@@ -20,7 +20,8 @@ This document shows how to use package  [AMOUNTAIN](http://bioconductor.org/pack
 
 # Data preparation
 
-We start by downloading the expression data from GEO database. We use a `GEO2R` style:
+We start by downloading the expression data from GEO database. The data (GSE25101) is expression profiling in whole blood in ankylosing spondylitis patients and controls, coming from ^[Pimentel-Santos et.al. Whole blood transcriptional profiling in ankylosing spondylitis identifies novel candidate genes that might contribute to the inflammatory and tissue-destructive disease aspects. Arthritis research & therapy, 13(2), p.R57.]. 
+We use a `GEO2R` style:
 ```{r,eval=FALSE}
 library(Biobase)
 library(GEOquery)
