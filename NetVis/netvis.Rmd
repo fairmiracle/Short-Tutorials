@@ -32,7 +32,7 @@ Basic visualization may not include all these features, but should contain any i
 
 Here is the basic visualization with $\mathtt{igraph}$
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 load('toydata.Rdata')
 tao <- 0.7 # threshold to cut-off correlation value. Higher tao means sparser.
 diag(w) <- 0
@@ -64,7 +64,7 @@ tkplot(g,layout=layout_with_fr,canvas.width = 1000, canvas.height = 800,
 ```
 
 Or save the whole picture as EPS format by the following code. 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 setEPS()
 postscript('toydata.eps',fonts=c("serif", "Palatino"))
 plot(g,layout=layout_with_fr,edge.width=(abs(w/max(w)))*5,vertex.size=10*abs((z/max(z))),
