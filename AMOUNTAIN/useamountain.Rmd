@@ -126,7 +126,7 @@ ModulesAmoutain(W,z,1,100,savefile,100,100)
 # Enrichment analysis
 Functional enrichment analysis is not included in the package `AMOUNTAIN`, but works as an important component of network analysis. In order to check whether there are more known interactions in the modules, we use the resources from the STRING databases. The `STRINGdb` package makes it easy to access results programmatically.
 ```{r,eval=FALSE}
-fhead = '50500'
+fhead = 'fixed100'
 dir.create(fhead, showWarnings = TRUE, recursive = FALSE, mode = "0777")
 rlines=readLines(savefile)
 modsize = c()
@@ -139,14 +139,11 @@ moduleppiscore=matrix(0,nrow=length(rlines),ncol=2)
 for (i in 1:length(rlines)) {
 	# save the modules gene lists
 	ap=strsplit(rlines[i],'\t')[[1]]
- 	modscore = c(modscore,ap[1])
  	ap=as.numeric(ap[2:length(ap)])
  	modsize = c(modsize,length(ap))
  	probeid = rownames(ex)[ap]
- 	midx <- match(probeid,maptable[,1])
- 	entrizd = maptable[midx,2]
- 	gsymbol = maptable[midx,3]
-
+ 	midx <- match(probeid,tT[,1])
+ 	gsymbol = as.character(tT[midx,7])
  	write(paste('Module',i,sep=' '),
  		file=paste(fhead,"/modulegenes.txt",sep=''),append = TRUE)
  	write(paste('probe id','gene symbol',sep=' '),
@@ -156,8 +153,7 @@ for (i in 1:length(rlines)) {
   		sep='\t',col.names = F,row.names= F,quote=F,append = TRUE)
  	writeLines(as.character(probeid), paste(fhead,"/modulegenesprobe-2h-",i,".txt",sep=''))
  	mgenes <- as.character(gsymbol[!is.na(gsymbol)])
- 	writeLines(as.character(gsymbol[!is.na(gsymbol)]), paste(fhead,"/modulegenessymbol-2h-",i,".txt",sep=''))
-
+ 
  	# access STRING
  	diff_exp_genes <- data.frame(mgenes,mgenes)
 	colnames(diff_exp_genes)<-c('gene','backup')
@@ -231,6 +227,10 @@ Table 1: KEGG pathways enriched by Module 1 identified from weighted co-expressi
 14    18 0.93173279 -1.7723191      0.9947534    1.929683    0.3145452   50.07768
 15    20 0.92937132 -1.7551762      0.9941313    1.275479    0.1640478   38.10784
 
+
+
+## Comparison with WGCNA
+Since both WGCNA^[Langfelder, P. and Horvath, S., 2008. WGCNA: an R package for weighted correlation network analysis. BMC bioinformatics, 9(1), p.559.] and AMOUNTAIN takes weighted gene co-expression networks as input, and modules identification can be regarded as graph partition or nodes clustering, it is necessary to compare WGCNA and AMOUNTAIN. We start by selecting the proper soft power by constructing the Topological Overlap Matrix (TOM), using WGCNA function `pickSoftThreshold`. It turns out power=14 fits the scale-free topology. 15 modules are detected, with average size 1211. 5 of them have PPI enrichment p-value < 0.05 and 13 are enriched by at least one GO category with FDR p-value lower than 0.05. Including more genes in functional enrichment analysis leads to more significant GO terms, but also bring a large proportion of unrelated genes.
 -->
 
 # Endnote
