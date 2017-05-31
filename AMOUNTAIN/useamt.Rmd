@@ -1,0 +1,245 @@
+---
+title: "Using AMOUNTAIN: step by step"
+author: "Dong Li"
+date: "31 May 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Motivation
+
+This document shows how to use package  [AMOUNTAIN](http://bioconductor.org/packages/release/bioc/html/AMOUNTAIN.html) package step by step. 
+
+# Data preparation
+
+We start by downloading the expression data from GEO database. The data (GSE25101) is expression profiling in whole blood in ankylosing spondylitis patients and controls, coming from ^[Pimentel-Santos et.al. Whole blood transcriptional profiling in ankylosing spondylitis identifies novel candidate genes that might contribute to the inflammatory and tissue-destructive disease aspects. Arthritis research & therapy, 13(2), p.R57.]. 
+We use a `GEO2R` style:
+```{r,eval=FALSE}
+library(Biobase)
+library(GEOquery)
+library(limma)
+
+# load series and platform data from GEO
+
+gset <- getGEO("GSE25101", GSEMatrix =TRUE, AnnotGPL=TRUE)
+if (length(gset) > 1) idx <- grep("GPL6947", attr(gset, "names")) else idx <- 1
+gset <- gset[[idx]]
+
+# make proper column names to match toptable 
+fvarLabels(gset) <- make.names(fvarLabels(gset))
+
+# group names for all samples
+gsms <- "11111111111111110000000000000000"
+sml <- c()
+for (i in 1:nchar(gsms)) { sml[i] <- substr(gsms,i,i) }
+
+# log2 transform
+ex <- exprs(gset)
+qx <- as.numeric(quantile(ex, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+LogC <- (qx[5] > 100) ||
+          (qx[6]-qx[1] > 50 && qx[2] > 0) ||
+          (qx[2] > 0 && qx[2] < 1 && qx[4] > 1 && qx[4] < 2)
+if (LogC) { ex[which(ex <= 0)] <- NaN
+  exprs(gset) <- log2(ex) }
+```
+
+The nodes scores are calculated by the expression level, which can be accomplished by the `limma` package.
+```{r,eval=FALSE}
+# set up the data and proceed with analysis
+sml <- paste("G", sml, sep="")    # set group names
+fl <- as.factor(sml)
+gset$description <- fl
+design <- model.matrix(~ description + 0, gset)
+colnames(design) <- levels(fl)
+fit <- lmFit(gset, design)
+cont.matrix <- makeContrasts(G1-G0, levels=design)
+fit2 <- contrasts.fit(fit, cont.matrix)
+fit2 <- eBayes(fit2, 0.01)
+
+# expression level based node score
+z = qnorm(1-fit2$p.value)
+tT <- topTable(fit2, adjust="fdr", sort.by="B", number=250)
+tT <- subset(tT, select=c("ID","adj.P.Val","P.Value","t","B","logFC",
+                          "Gene.symbol","Gene.title"))
+write.table(tT, file='topTablebyLimma.csv', row.names=F, sep="\t",quote=F)
+
+# used for annotation
+tT <- topTable(fit2, adjust="fdr", sort.by="B", number=dim(ex)[1])
+tT <- subset(tT, select=c("ID","adj.P.Val","P.Value","t","B","logFC",
+                          "Gene.symbol","Gene.title"))
+
+# network adjacency matrix
+W <- cor(t(ex))
+W[W<0] <- 0
+```
+
+# Modules identification
+
+As we want to identify multiple modules, we use the module extraction way. We find N modules by running the algorithm N times, with each time simply extracting a module and subsequently delete the module from background network. The module size is constrained around 100.
+```{r,eval=FALSE}
+library(AMOUNTAIN)
+ModulesAmoutain <- function(W,z,lambdav,Nmodule,savefile,minsize,maxsize){
+	N <- dim(W)[1]
+	gNames = as.character(1:N)
+	for (ii in 1:Nmodule) {
+		abegin <- 0.01
+		aend <- 0.9
+		# size control
+		for (i in 1:20) {
+			x <- CGPFixSS(W,z,a=(abegin+aend)/2,lambda = lambdav,maxiter=50)
+			predictedid <- which(x[[2]]!=0)
+			if(length(predictedid) > maxsize){
+				abegin = (abegin+aend)/2
+			}else if (length(predictedid) < minsize){
+				aend = (abegin+aend)/2
+			}else
+				break
+		}
+
+			modulescore <- sum(W[predictedid,predictedid])+lambdav*sum(z[predictedid])
+			tmpstr <- gNames[predictedid]
+			cp <- c()
+			for (j in 1:length(tmpstr)){
+				cp <- paste(cp,tmpstr[j],sep='\t')
+			}
+			write(paste(modulescore,cp,sep=''),file = savefile,append = TRUE)
+		
+		W <- W[-predictedid,-predictedid]
+		z <- z[-predictedid]
+		gNames <- gNames[-predictedid]
+		N <- dim(W)[1]
+		print(paste('Finishing module ',ii,sep=''))
+		if(N < 100 | sum(W)==0)
+			break
+	}
+}
+savefile <- 'AMOUNTAINfixed100.txt'
+ModulesAmoutain(W,z,1,100,savefile,100,100)
+```
+
+# Enrichment analysis
+Functional enrichment analysis is not included in the package `AMOUNTAIN`, but works as an important component of network analysis. In order to check whether there are more known interactions in the modules, we use the resources from the STRING databases. The `STRINGdb` package makes it easy to access results programmatically.
+```{r,eval=FALSE}
+fhead <- 'fixed100'
+dir.create(fhead, showWarnings = TRUE, recursive = FALSE, mode = "0777")
+rlines <- readLines(savefile)
+modsize <- c()
+
+library(STRINGdb)
+string_db <- STRINGdb$new( version="10", species=9606,
+score_threshold=0, input_directory="" )
+moduleppiscore <- matrix(0,nrow=length(rlines),ncol=2)
+
+for (i in 1:length(rlines)) {
+	# save the modules gene lists
+	ap <- strsplit(rlines[i],'\t')[[1]]
+ 	ap <- as.numeric(ap[2:length(ap)])
+ 	modsize <- c(modsize,length(ap))
+ 	probeid <- rownames(ex)[ap]
+ 	midx <- match(probeid,tT[,1])
+ 	gsymbol <- as.character(tT[midx,7])
+ 	write(paste('Module',i,sep=' '),
+ 		file=paste(fhead,"/modulegenes.txt",sep=''),append = TRUE)
+ 	write(paste('probe id','gene symbol',sep=' '),
+  		file=paste(fhead,"/modulegenes.txt",sep=''),append = TRUE)
+ 	write.table(data.frame(probeid,gsymbol), 
+  		file=paste(fhead,"/modulegenes.txt",sep=''),
+  		sep='\t',col.names = F,row.names= F,quote=F,append = TRUE)
+ 	writeLines(as.character(probeid), paste(fhead,"/modulegenesprobe-2h-",i,".txt",sep=''))
+ 	mgenes <- as.character(gsymbol[!is.na(gsymbol)])
+ 
+ 	# access STRING
+ 	diff_exp_genes <- data.frame(mgenes,mgenes)
+	colnames(diff_exp_genes)<-c('gene','backup')
+	genes_mapped <- string_db$map(diff_exp_genes, "gene", removeUnmappedRows = TRUE )
+	hits <- genes_mapped$STRING_id
+	ppiscore <- string_db$get_ppi_enrichment(hits)$enrichment
+	moduleppiscore[i,1]=ppiscore
+	er <- string_db$get_enrichment(hits)
+	er<-er[which(er$pvalue_fdr<0.05),]
+	moduleppiscore[i,2]=dim(er)[1]
+	if (dim(er)[1] > 0){
+		write.xlsx(x = er, file = paste(fhead,"/Enrichment.xlsx",sep=''),append = TRUE,
+    	sheetName = paste('module',i,sep=''), row.names = FALSE, col.names=TRUE)
+	}
+	print(paste("Finishing ",i,sep=''))
+
+}
+write.table(modsize,file=paste(fhead,"/modsize.txt",sep=''),
+            row.names=F,col.names=F,quote=F)
+colnames(moduleppiscore)=c('ppi enrichment pvalue','significantly enriched items')
+write.table(moduleppiscore,file=paste(fhead,"/ppienrichmentstats.txt",sep=''),
+  quote=F,row.names=F,col.names=F,sep=' ')
+length(which(moduleppiscore[,1]<0.05))
+```
+
+From the statistics we can see that 49 out of 100 modules have PPI enrichment p-value < 0.05, and 58 out of 100 modules are enriched by at least one GO category with FDR p-value lower than 0.05. The details of enrichment results are stored at [Enrichment.xlsx](http://www.cs.bham.ac.uk/~dxl466/st/Enrichment.xlsx).
+We can see that module #19 are enriched by "GO:0045061, thymic T cell selection" and "GO:0033077, T cell differentiation in thymus", listed as Table 3 in the original study. Quite a few modules are enriched by immune-associated pathways, such as module #61, #63, #69 and module #61 are enriched by "GO:0002683 negative regulation of immune system proces", which are consistent with the conclusion from the original study. Moreover, the modules provide a straightforward way to see the interactions of genes. The following figure shows module #61 according to STRING:
+
+![Module 66 identified from weighted co-expression network (GSE25101), plotted by STRING, where edges represent the known interactions including curated databases and experimentally determined and predicted interactions such as gene neighborhood and gene co-occurrence. Colored nodes standard for query proteins and first shell of interactors, and white nodes for second shell of interactors.](string_module61.png)
+Figure 1: Module 61 identified from weighted co-expression network (GSE25101), plotted by STRING, where edges represent the known interactions including curated databases and experimentally determined and predicted interactions such as gene neighborhood and gene co-occurrence. Colored nodes standard for query proteins and first shell of interactors, and white nodes for second shell of interactors.
+
+## Comparison with DEGs
+
+Note the first identified module has 100 probes and 90 valid official gene symbols, 30 of which are listed in the top 100 differentially expressed genes. We compare the two gene lists by looking at the interactions and enriched biological functions:
+
+![Module 66 identified from weighted co-expression network (GSE25101), plotted by STRING](string_module1.png)
+Figure 2: Module 1 identified from weighted co-expression network (GSE25101), plotted by STRING. PPI enrichment p-value:	0. Enriched Molecular Function: GO:0015078, hydrogen ion transmembrane transporter activity FDR 9.37e-06.
+
+![Module 66 identified from weighted co-expression network (GSE25101), plotted by STRING](string_topDEGs.png)
+Figure 3: Genes from top 100 differentially expressed genes, plotted by STRING. PPI enrichment p-value: 5.13e-08. Enriched Molecular Function: GO:000372, RNA binding FDR 7.42e-03.
+
+In addition, there are 8 KEGG pathways are enriched by the first module with FDR<0.05, but none was found in the top 100 DEGs.
+
+|KEGG Pathwayspathway ID|pathway description|count in gene set|	false discovery rate|
+|-----+--------------+-----------------+---------|
+|00190|	Oxidative phosphorylation|	9|	3.23e-07|
+|05012|	Parkinson s disease|	8|	6.12e-06|
+|04932|	Non-alcoholic fatty liver disease (NAFLD)|	8|	6.31e-06|
+|05010|	Alzheimer s disease	|8|	1.1e-05|
+|05016|	Huntington s disease	|8|	1.88e-05|
+|03010|	Ribosome	|6|	0.000335|
+|04260|	Cardiac muscle contraction	|5|	0.000335|
+|03040|	Spliceosome	|4|	0.0402|
+Table 1: KEGG pathways enriched by Module 1 identified from weighted co-expression network (GSE25101).
+
+<!--
+## Comparison with WGCNA
+
+   Power   SFT.R.sq      slope truncated.R.sq     mean.k.    median.k.     max.k.
+1      1 0.09482105  1.0745494      0.9541591 4007.450641 3974.4987585 6173.15836
+2      2 0.15558357 -0.7288135      0.9527626 1366.981561 1295.7085865 3038.67291
+3      3 0.56833094 -1.3558185      0.9744922  582.248581  512.9854480 1775.29393
+4      4 0.74468101 -1.6419304      0.9827460  285.758469  229.7364949 1144.63570
+5      5 0.81429124 -1.7822510      0.9848310  154.982070  112.1189137  787.31585
+6      6 0.84307965 -1.8658222      0.9829521   90.569360   58.7297370  566.94883
+7      7 0.87371626 -1.8799607      0.9899281   56.087965   32.6719482  422.51843
+8      8 0.88742915 -1.8898619      0.9905894   36.384025   19.0869170  323.74432
+9      9 0.89884964 -1.8890582      0.9923806   24.516152   11.5110893  253.65998
+10    10 0.90389596 -1.8864734      0.9934647   17.051482    7.1598485  202.27419
+11    12 0.91983297 -1.8485435      0.9968643    8.907480    2.9725236  134.16031
+12    14 0.92698312 -1.8174811      0.9972499    5.045076    1.3096149   93.04910
+13    16 0.93002149 -1.7915827      0.9968230    3.042637    0.6280683   67.31261
+14    18 0.93173279 -1.7723191      0.9947534    1.929683    0.3145452   50.07768
+15    20 0.92937132 -1.7551762      0.9941313    1.275479    0.1640478   38.10784
+
+
+
+## Comparison with WGCNA
+Since both WGCNA^[Langfelder, P. and Horvath, S., 2008. WGCNA: an R package for weighted correlation network analysis. BMC bioinformatics, 9(1), p.559.] and AMOUNTAIN takes weighted gene co-expression networks as input, and modules identification can be regarded as graph partition or nodes clustering, it is necessary to compare WGCNA and AMOUNTAIN. We start by selecting the proper soft power by constructing the Topological Overlap Matrix (TOM), using WGCNA function `pickSoftThreshold`. It turns out power=14 fits the scale-free topology. 15 modules are detected, with average size 1211. 5 of them have PPI enrichment p-value < 0.05 and 13 are enriched by at least one GO category with FDR p-value lower than 0.05. Including more genes in functional enrichment analysis leads to more significant GO terms, but also bring a large proportion of unrelated genes.
+-->
+
+# Endnote
+
+Additional files:
+
+Module genes:
+[modulegenes.txt](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/modulegenes.txt) http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/modulegenes.txt
+
+Details of enrichment analysis: [Enrichment.xlsx](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/Enrichment.xlsx) http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/Enrichment.xlsx
+
+All source code:
+[useAMOUNTAIN.R](http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/useAMOUNTAIN.R) http://www.cs.bham.ac.uk/~dxl466/st/AMOUNTAIN/useAMOUNTAIN.R
