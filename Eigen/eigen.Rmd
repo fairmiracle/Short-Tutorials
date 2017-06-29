@@ -54,7 +54,7 @@ This problem is known as **spectral matching**, and the global optimum is given 
   
 
 # The equivalence
-## Modularity maximization
+### Modularity maximization
 In PRE13 Newman introduced a hyperellipsoid form $\sum_i a_i s_i^2 = \sum_i a_i$ for any set of nonnegative constants~$a_i$. The above constraint should at least allow $s_i=\pm1$ in the original ``unrelaxed'' problem. When we set $a_i=k_i$, we have the constraint:
 $$\sum_i k_i s_i^2 = 2m$$
 The maximum of $Q$ is given by the derivative of a Lagrangian function:
@@ -75,7 +75,7 @@ We define a rescaled vector $\vec{u} = {\bf D}^{1/2}\vec{s}$, i.e., $\vec{s}={\b
 $$\bigl( {\bf D}^{-1/2}{\bf A}{\bf D}^{-1/2} \bigr) {\bf u} = \lambda{\bf u}.$$
 We almost get there. The matrix $${\bf L} = {\bf D}^{-1/2}{\bf A}{\bf D}^{-1/2}$$ looks so familiar...yes, the normalized Laplacian. [This post](http://www.cs.bham.ac.uk/~dxl466/st/spectr.html) may helps a bit about the understanding on normalized-cut graph partitioning.
 
-## Graph partitioning
+### Graph partitioning
 Let us now recall how traditional graph partitioning does. It is required the cut size $R$-the number of edges running between parts-is minimized. In practise we define a normalized cut $Ncut$: $$Ncut=\frac{R}{\kappa_1\kappa_2}$$ 
 where $\kappa_1=vol(G_1)=\sum_{i\in G_1,j}w_{i,j}=\sum_{i\in G_1}k_i$ is the sum of degrees of vertices in group 1.
 
@@ -167,7 +167,7 @@ plot(karate,mark.groups=wcr)
 
 Calling community detection algorithms in igraph is straightforward. Function `modularity` directly gives out the Q value for a partition. The implementation considers further division thus returns four communities, and the Q value is higher.
 
-```{r,message=FALSE, warning=FALSE}
+```{r,eval=FALSE}
 wc <- cluster_leading_eigen(karate)
 membership(wc)
 modularity(wc)
