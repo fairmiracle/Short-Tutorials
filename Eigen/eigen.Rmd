@@ -48,14 +48,14 @@ $$Q = {1\over4m} \sum_{ij} B_{ij} (s_is_j+1)
 
 as $\sum_j B_{ij} = \sum_j A_{ij} - {k_i\over2m} \sum_j k_j= k_i - {k_i\over2m} 2m = 0$.
 
-Since $s_i$ are discrete values, maximizing Q is essentially a combinatorial problem. It is common to relax $\bf s$ to the real values. We are now solving an approximation which gives good results in practice. Also, note imposing constraints on $s_i$ is necessary otherwise we get an unbounded problem. The most commonly used L2-norm constraint $\sum_is_i=1$ actually limits any $s_i$ in the range $-\sqrt{n}\leq n \leq \sqrt{n}$. The problem is formally written as
+Since $s_i$ are discrete values, maximizing Q is essentially a combinatorial problem. It is common to relax $\bf s$ to the real values. We are now solving an approximation which gives good results in practice. Also, note imposing constraints on $s_i$ is necessary otherwise we get an unbounded problem. The most commonly used L2-norm constraint $\sum_is_i=1$ actually limits any $s_i$ in the range $-\sqrt{n}\leq s_i \leq \sqrt{n}$. The problem is formally written as
 $$\textrm{maximize}_{\bf s}\ Q={\bf s}^\top B {\bf s}\quad s.t.\quad \|{\bf s}\|_2=1$$
 This problem is known as **spectral matching**, and the global optimum is given by the leading eigenvector of $B$. Newman used another logic to conclude the leading eigenvector of $B$ in PNAS06, which partly explain why eigenvector maximizes it. After getting the eigenvector $\bf u$, we divide the vertices into two groups according to the signs of elements in $\bf u$. 
   
 
 # The equivalence
 ### Modularity maximization
-In PRE13 Newman introduced a hyperellipsoid form $\sum_i a_i s_i^2 = \sum_i a_i$ for any set of nonnegative constants~$a_i$. The above constraint should at least allow $s_i=\pm1$ in the original ``unrelaxed'' problem. When we set $a_i=k_i$, we have the constraint:
+In PRE13 Newman introduced a hyperellipsoid form $\sum_i a_i s_i^2 = \sum_i a_i$ for any set of nonnegative constants $a_i$. The above constraint should at least allow $s_i=\pm1$ in the original ``unrelaxed'' problem. When we set $a_i=k_i$, we have the constraint:
 $$\sum_i k_i s_i^2 = 2m$$
 The maximum of $Q$ is given by the derivative of a Lagrangian function:
 $${\partial\over\partial s_i} \biggl[ \sum_{ij} B_{ij} s_i s_j
@@ -66,8 +66,8 @@ $$\sum_j B_{ij} s_j = \lambda k_i s_i,$$
 If we replace the original form of $B_{ij}$ in the above equation, we get
 $$\sum_j A_{ij} s_j = k_i \biggl(\lambda s_i + {1\over2m}\sum_j k_j s_j\biggr),$$
 or in matrix notation as
-$${\bf A}{\bf s} = {\bf D} \biggl(\lambda \vec{s} + {\vec{k}^T\vec{s}\over2m}
-                 \vec{1} \biggr),$$
+$${\bf A}{\bf s} = {\bf D} \biggl(\lambda {\bf s} + {{\bf k}^\top{\bf s}\over2m}
+                 {\bf 1} \biggr),$$
 
 $${\bf A}{\bf s} = \lambda {\bf D} {\bf s}.
 $$
@@ -83,9 +83,10 @@ We still use the indicating variables $s_i$ for each vertex, but slightly differ
 $${\bf k}^\top{\bf s} = \sum_i k_i s_i = \sqrt{\kappa_2\over\kappa_1} \sum_{i\in1} k_i- \sqrt{\kappa_1\over\kappa_2} \sum_{i\in2} k_i= \sqrt{\kappa_2\kappa_1} - \sqrt{\kappa_1\kappa_2} = 0,$$
 and
 $${\bf s}^\top{\bf D}{\bf s} = \sum_i k_i s_i^2= {\kappa_2\over\kappa_1} \sum_{i\in1} k_i + {\kappa_1\over\kappa_2} \sum_{i\in2} k_i = \kappa_2 + \kappa_1 = 2m.$$
+It is a trick to construct what we need like this:
 $$s_i + \sqrt{\kappa_1\over\kappa_2}
   = {2m\over\sqrt{\kappa_1\kappa_2}}\,\delta_{g_i,1},$$
-Similarly
+Similarly,
 $$
 s_i - \sqrt{\kappa_2\over\kappa_1}
   = - {2m\over\sqrt{\kappa_1\kappa_2}}\,\delta_{g_i,2} .
@@ -108,7 +109,7 @@ Minimizing $Ncut$ is equivalent to maximizing ${\bf s}^\top{\bf A s}$. Like befo
 $$
 {\bf A s} = \lambda{\bf D s} + \mu{\bf k}.
 $$
-Multiplying on the left by~${\bf 1}^\top$ and making use of ${\bf 1}^\top{\bf A}
+Multiplying on the left by ${\bf 1}^\top$ and making use of ${\bf 1}^\top{\bf A}
 = {\bf 1}^\top{\bf D} ={\bf k}^\top$ gives
 $$
 {\bf k}^\top{\bf s} = \lambda {\bf k}^\top{\bf s} + 2m\mu,
@@ -121,7 +122,9 @@ which is exactly the same as in previous section *Modularity maximization*...Bin
 
 # Implementation
 
-[igraph](http://igraph.org/redirect.html) package implemented most community detection algorithms. It uses C as core language, R and Python interface languages, which considers both the efficiency and convenience. It even contains some graph dataset, including the famous ["Zachary" karate club network](http://networkkarate.tumblr.com). All these features make it a perfect tool in network science research.
+[igraph](http://igraph.org/redirect.html) package implemented most community detection algorithms. It uses C as core language, R and Python interface languages, which considers both the efficiency and convenience. It even contains some graph dataset, including the famous "Zachary" karate club network, yes, the one "*If you cannot get it right on this network, then go home*". 
+
+All these features make it a perfect tool in network science research.
 
 ```{r,message=FALSE, warning=FALSE}
 library('igraph')
