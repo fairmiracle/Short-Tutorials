@@ -54,7 +54,7 @@ as $\sum_j B_{ij} = \sum_j A_{ij} - {k_i\over2m} \sum_j k_j= k_i - {k_i\over2m} 
 
 Since $s_i$ are discrete values, maximizing Q is essentially a combinatorial problem. It is common to relax $\bf s$ to the real values. We are now solving an approximation which gives good results in practice. Also, note imposing constraints on $s_i$ is necessary otherwise we get an unbounded problem. The most commonly used L2-norm constraint $\sum_is_i=1$ actually limits any $s_i$ in the range $-\sqrt{n}\leq s_i \leq \sqrt{n}$. The problem is formally written as
 $$\textrm{maximize}_{\bf s}\ Q={\bf s}^\top B {\bf s}\quad s.t.\quad \|{\bf s}\|_2=1$$
-This problem is known as **spectral matching**, and the global optimum is given by the leading eigenvector of $B$. Newman used another logic to conclude the leading eigenvector of $B$ in PNAS06, which partly explain why eigenvector maximizes it. After getting the eigenvector $\bf u$, we divide the vertices into two groups according to the signs of elements in $\bf u$. 
+This problem is known as **spectral matching**, or **Rayleigh quotient** or even **PCA**, and the global optimum is given by the leading eigenvector of $B$. A simple [Lagrange multipliers](https://en.wikipedia.org/wiki/Lagrange_multiplier) would give the solution. Newman used another logic to conclude the leading eigenvector of $B$ in PNAS06, which partly explain why eigenvector maximizes it. After getting the leading eigenvector $\bf u$, we divide the vertices into two groups according to the signs of elements in $\bf u$. i.e., $i$ belongs to group 1 if $u_i>0$ if and group 2 for $u_i<0$.
   
 
 # The equivalence
