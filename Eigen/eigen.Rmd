@@ -1,8 +1,12 @@
 ---
-title: "Graph partitioning, modularity maximization and eigenvectors"
+title: "Spectral Methods For Community Detection"
+subtitle: "Graph partitioning, modularity maximization and eigenvectors"
 author: "Dong Li"
 date: "June 26, 2017"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Motivation
-[Mark Newman](http://www-personal.umich.edu/~mejn/) is a leading research in the field of complex networks. Because of his fundamental contribution, networks have been a hot topic for years. Reading Mark Newman's papers is always enjoyable since they are easy to understand, but filled with insights. The fluent style and clear equations sometimes make me wrongly believe anyone could do that kind of research...Anyway, there are three papers (all sole author) talking about the same thing: the spectral algorithm for community detection.
+[Mark Newman](http://www-personal.umich.edu/~mejn/) is a leading research in the field of complex networks. Because of his fundamental contribution, networks has been a hot topic for years. Reading Mark Newman's papers is always enjoyable since they are easy to understand, but filled with insights. The fluent style and clear equations sometimes make me wrongly believe anyone could do that kind of research...Anyway, there are three papers (all sole author) talking about the same thing: the spectral algorithm for community detection.
 
  - [PNAS06] Modularity and community structure in networks. PNAS, 2006.
  - [PRE06] Finding community structure in networks using the eigenvectors of matrices. Physical review E, 2006.
@@ -67,17 +71,19 @@ If we replace the original form of $B_{ij}$ in the above equation, we get
 $$\sum_j A_{ij} s_j = k_i \biggl(\lambda s_i + {1\over2m}\sum_j k_j s_j\biggr),$$
 or in matrix notation as
 $${\bf A}{\bf s} = {\bf D} \biggl(\lambda {\bf s} + {{\bf k}^\top{\bf s}\over2m}
-                 {\bf 1} \biggr),$$
-
+                 {\bf 1} \biggr).$$
+Note ${\bf A 1}={\bf D 1}={\bf k}$ and ${\bf k}^\top{\bf 1}=2m$, multiply above equation by ${\bf 1}^\top$ to get $\lambda{\bf k}^\top{\bf s}=0$.  Since we assuming there exists a nontrivial eigenvalue $\lambda >0$, ${\bf k}^\top{\bf s}=0$. Combining these we have
 $${\bf A}{\bf s} = \lambda {\bf D} {\bf s}.
 $$
-We define a rescaled vector $\vec{u} = {\bf D}^{1/2}\vec{s}$, i.e., $\vec{s}={\bf D}^{-1/2}\vec{u}$. Then 
+This is also called generalized eigenvector equation. We can see that  that the uniform vector ${\bf 1}$ is an eigenvector, in other words all values in $\bf s$ are postive in this case. But it fails to satisigy ${\bf k}^\top{\bf s}=0$. Alternatively we choose the eigenvector corresponding to the second most positive eigenvalue.
+
+We define a rescaled vector ${\bf u} = {\bf D}^{1/2}{\bf s}$, i.e., ${\bf s}={\bf D}^{-1/2}{\bf u}$. Then 
 $$\bigl( {\bf D}^{-1/2}{\bf A}{\bf D}^{-1/2} \bigr) {\bf u} = \lambda{\bf u}.$$
 We almost get there. The matrix $${\bf L} = {\bf D}^{-1/2}{\bf A}{\bf D}^{-1/2}$$ looks so familiar...yes, the normalized Laplacian. [This post](http://www.cs.bham.ac.uk/~dxl466/st/spectr.html) may helps a bit about the understanding on normalized-cut graph partitioning.
 
 ### Graph partitioning
 Let us now recall how traditional graph partitioning does. It is required the cut size $R$-the number of edges running between parts-is minimized. In practise we define a normalized cut $Ncut$: $$Ncut=\frac{R}{\kappa_1\kappa_2}$$ 
-where $\kappa_1=vol(G_1)=\sum_{i\in G_1,j}w_{i,j}=\sum_{i\in G_1}k_i$ is the sum of degrees of vertices in group 1.
+where $\kappa_1=\sum_{i\in 1,j}w_{i,j}=\sum_{i\in 1}k_i$ is the sum of degrees of vertices in group 1, also called the volume in somewhere else.
 
 We still use the indicating variables $s_i$ for each vertex, but slightly different to make $s_i=\sqrt{\kappa_2/\kappa_1}$ if $i$ belongs to group 1 and $s_i=-\sqrt{\kappa_2/\kappa_1}$ for group 2. Note that
 $${\bf k}^\top{\bf s} = \sum_i k_i s_i = \sqrt{\kappa_2\over\kappa_1} \sum_{i\in1} k_i- \sqrt{\kappa_1\over\kappa_2} \sum_{i\in2} k_i= \sqrt{\kappa_2\kappa_1} - \sqrt{\kappa_1\kappa_2} = 0,$$
@@ -92,8 +98,7 @@ s_i - \sqrt{\kappa_2\over\kappa_1}
   = - {2m\over\sqrt{\kappa_1\kappa_2}}\,\delta_{g_i,2} .
 $$
 Using these results we have
-$$\sum_{ij} A_{ij} \biggl( s_i + \sqrt{\kappa_1\over\kappa_2} \biggr)
-  \biggl( s_j - \sqrt{\kappa_2\over\kappa_1} \biggr)\qquad{} = -{(2m)^2\over\kappa_1\kappa_2} \sum_{ij} A_{ij}\,\delta_{g_i,1}\delta_{g_j,2}= -{(2m)^2\over\kappa_1\kappa_2} R,$$
+$$\sum_{ij} A_{ij} \biggl( s_i + \sqrt{\kappa_1\over\kappa_2} \biggr)\biggl( s_j - \sqrt{\kappa_2\over\kappa_1} \biggr)= -{(2m)^2\over\kappa_1\kappa_2} \sum_{ij} A_{ij}\,\delta_{g_i,1}\delta_{g_j,2}= -{(2m)^2\over\kappa_1\kappa_2} R,$$
 
 Writing the left side into matrix form:
 $$
@@ -168,7 +173,7 @@ wcr <- list(which(u>0),which(u<0))
 plot(karate,mark.groups=wcr)
 ```
 
-Calling community detection algorithms in igraph is straightforward. Function `modularity` directly gives out the Q value for a partition. The implementation considers further division thus returns four communities, and the Q value is higher.
+Calling community detection algorithms in igraph is straightforward. Function `cluster_leading_eigen` implements the spectral algorithm in PRE06, and function `modularity` directly gives out the Q value for a partition. The implementation considers further division thus returns four communities, and the Q value is higher.
 
 ```{r,eval=FALSE}
 wc <- cluster_leading_eigen(karate)
