@@ -175,7 +175,7 @@ plot(karate,mark.groups=wcr)
 
 Calling community detection algorithms in igraph is straightforward. Function `cluster_leading_eigen` implements the spectral algorithm in PRE06, and function `modularity` directly gives out the Q value for a partition. The implementation considers further division thus returns four communities, and the Q value is higher.
 
-```{r,eval=FALSE}
+```{r,message=FALSE, warning=FALSE}
 wc <- cluster_leading_eigen(karate)
 membership(wc)
 modularity(wc)
