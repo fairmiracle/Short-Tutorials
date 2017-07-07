@@ -16,9 +16,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # Motivation
 [Mark Newman](http://www-personal.umich.edu/~mejn/) is a leading research in the field of complex networks. Because of his fundamental contribution, networks has been a hot topic for years. Reading Mark Newman's papers is always enjoyable since they are easy to understand, but filled with insights. The fluent style and clear equations sometimes make me wrongly believe anyone could do that kind of research...Anyway, there are three papers (all sole author) talking about the same thing: the spectral algorithm for community detection.
 
- - [PNAS06] Modularity and community structure in networks. PNAS, 2006.
- - [PRE06] Finding community structure in networks using the eigenvectors of matrices. Physical review E, 2006.
- - [PRE13] Spectral methods for community detection and graph partitioning. Physical Review E, 2013.
+ - [[PNAS06](https://arxiv.org/pdf/physics/0602124.pdf)] Modularity and community structure in networks. PNAS, 2006.
+ - [[PRE06](https://arxiv.org/pdf/physics/0605087.pdf)] Finding community structure in networks using the eigenvectors of matrices. Physical review E, 2006.
+ - [[PRE13](https://arxiv.org/pdf/1307.7729.pdf)] Spectral methods for community detection and graph partitioning. Physical Review E, 2013.
 
 Here I just follow these papers and explore the relationships between graph partitioning, modularity maximization, and eigenvectors.
 
