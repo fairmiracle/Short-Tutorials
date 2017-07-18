@@ -96,7 +96,7 @@ void naivemv(double *A, double *x, double *y, int m, int n){
 		y[i] = rowSum;
 	}
 }
-int main(int argc, char const *argv[]){\
+int main(int argc, char const *argv[]){
     ...
     naivemv(A, x, y1, n, n);
     ...
