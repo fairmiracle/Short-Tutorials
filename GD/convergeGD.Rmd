@@ -14,20 +14,20 @@ knitr::opts_chunk$set(echo = TRUE)
 > A method of writing proofs is proposed that makes it much harder to prove
 things that are not true. -- Leslie Lamport. "How to write a proof." 1993
 
-Gradient descend is probably the most intuitive optimization algorithm. Just like the other methods, first we use it for granted, then we try to figure out why it works. The most important part of this reasoning is to prove it rigorously, which has been completed by mathematicians long time ago. But it is still necessary to write it down myself, to enhance my understanding.
+Gradient descend is probably the most intuitive optimization algorithm. Just like the other methods, first we use it for granted, then we try to figure out why it works. The most important part of this reasoning is to prove it rigorously, which has been completed by mathematicians long time ago, and been  repeated again and again by many people. But it is still necessary to write it down myself, to enhance my understanding.
 
 # Algorithm
 
 Given a convex and differentiable function $f:\mathbb{R}^n\rightarrow\mathbb{R}$, we want to minimize it, 
 $$min_{{\bf x}\in\mathbb{R}^n} f({\bf x})$$
-We assue the optimal solution exists, i.e. $f({\bf x}^*)=minf({\bf x})$.
+We assume the optimal solution exists, i.e. $f({\bf x}^*)=minf({\bf x})$.
 
 The gradient descend: start with an initial ${\bf x}^{(0)}\in\mathbb{R}^n$, repeat
 $${\bf x}^{(k)}={\bf x}^{(k-1)}-t_k\nabla f({\bf x}^{(k-1)}),\ k=1,2,3...$$
 until some stopping criteria is satisified. $t_k$ is the step size at $k$-th iteration, which can be picked as fixed or flexible.
 
 # A simple example
-Image we want to minmize $f(x)=x^2$ in one-dimentional space, $\nabla f(x)=2x$, we set step size $t=0.01$, and maximal interation $T=1000$
+Image we want to minimize $f(x)=x^2$ in one-dimensional space, $\nabla f(x)=2x$, we set step size $t=0.01$, and maximal iteration $T=1000$
 ```{r,message=FALSE, warning=FALSE}
 x0 <- runif(1,0,1)
 T <- 1000
@@ -52,7 +52,7 @@ We start with the convexity of $f$:
 $$
 f({\bf y})\geq f({\bf x})+\nabla f({\bf x})^\top({\bf y}-{\bf x})
 $$
-which can be derived from the Jensen's inequality, or a straitforward geometric interpretation.
+which can be derived from the Jensen's inequality, or a straightforward geometric interpretation.
 
 We define Lipschitz continuity:
 
@@ -95,7 +95,7 @@ $$
 f({\bf x}^{(k)})-f({\bf x}^*)\leq \frac{\|{\bf x}^{(0)}-{\bf x}^*\|}{2tk}
 $$
 
-This theorem is the main theoratical result of gradient descend, which guarantees the algorithm has convergence rate $O(1/k)$. In other words, the algorithm guarantees to approximate the $\epsilon$-accuracy, i.e. $f({\bf x}^{(k)})-f({\bf x}^*)\leq \epsilon$ in $O(1/\epsilon)$ iterations.
+This theorem is the main theoretical result of gradient descend, which guarantees the algorithm has convergence rate $O(1/k)$. In other words, the algorithm guarantees to approximate the $\epsilon$-accuracy, i.e. $f({\bf x}^{(k)})-f({\bf x}^*)\leq \epsilon$ in $O(1/\epsilon)$ iterations.
 
 **Proof**:
 Assume ${\bf y}={\bf x}-t\nabla f({\bf x})$ of above lemma, and a fixed step size $0<t\leq 1/L$ and $0< t\leq 1/L$,
