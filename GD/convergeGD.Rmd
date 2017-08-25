@@ -142,7 +142,7 @@ $$
 This theorem is the main theoretical result of gradient descent, which guarantees the algorithm has convergence rate $O(1/k)$. In other words, the algorithm guarantees to approximate the $\epsilon$-accuracy, i.e. $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\epsilon)$ iterations.
 
 **Proof**:
-Assume $y=x-t\nabla f(x)$ of above lemma, and a fixed step size $0<t\leq 1/L$ and $0< t\leq 1/L$,
+Assume $y=x-t\nabla f(x)$ of above lemma, and a fixed step size $0<t\leq 1/L$,
 $$
 f(y)\leq f(x)-t\|\nabla f(x)\|^2+\frac{Lt^2}{2}\|\nabla f(x)\|^2\\
 =f(x)-t(1-\frac{Lt}{2})\|\nabla f(x)\|^2
@@ -172,6 +172,7 @@ $$
 Q.E.D
 
 # Subgradient method
+
 # Generalized gradient descent
 
 # Reference
