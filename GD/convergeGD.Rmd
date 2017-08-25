@@ -2,7 +2,10 @@
 title: "Why it converges: gradient descent"
 author: "Dong Li"
 date: "15 August 2017"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -14,19 +17,19 @@ knitr::opts_chunk$set(echo = TRUE)
 > A method of writing proofs is proposed that makes it much harder to prove
 things that are not true. -- Leslie Lamport. "How to write a proof." 1993
 
-Gradient descend is probably the most intuitive optimization algorithm. Just like the other methods, first we use it for granted, then we try to figure out why it works. The most important part of this reasoning is to prove it rigorously, which has been completed by mathematicians long time ago, and been  repeated again and again by many people. But it is still necessary to write it down myself, to enhance my understanding.
+Gradient descent is probably the most intuitive optimization algorithm. Just like the other methods, first we use it for granted, then we try to figure out why it works. The most important part of this reasoning is to prove it rigorously, which has been completed by mathematicians long time ago, and been  repeated again and again by many people. But it is still necessary to write it down myself, to enhance my understanding.
 
-# Algorithm
+# Basic gradient descent
 
 Given a convex and differentiable function $f:\mathbb{R}^n\rightarrow\mathbb{R}$, we want to minimize it, 
-$$min_{{\bf x}\in\mathbb{R}^n} f({\bf x})$$
-We assume the optimal solution exists, i.e. $f({\bf x}^*)=minf({\bf x})$.
+$$min_{x\in\mathbb{R}^n} f(x)$$
+We assume the optimal solution exists, i.e. $f(x^*)=minf(x)$.
 
-The gradient descend: start with an initial ${\bf x}^{(0)}\in\mathbb{R}^n$, repeat
-$${\bf x}^{(k)}={\bf x}^{(k-1)}-t_k\nabla f({\bf x}^{(k-1)}),\ k=1,2,3...$$
+The gradient descent: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
+$$x^{(k)}=x^{(k-1)}-t_k\nabla f(x^{(k-1)}),\ k=1,2,3...$$
 until some stopping criteria is satisified. $t_k$ is the step size at $k$-th iteration, which can be picked as fixed or flexible.
 
-# A simple example
+## A simple example
 Image we want to minimize $f(x)=x^2$ in one-dimensional space, $\nabla f(x)=2x$, we set step size $t=0.01$, and maximal iteration $T=1000$
 ```{r,message=FALSE, warning=FALSE}
 x0 <- runif(1,0,1)
@@ -47,10 +50,10 @@ obj <- obj[1:i]
 plot(obj,xlab='Iteration',ylab='Objective')
 ```
 
-# Convergence analysis
+## Convergence analysis
 We start with the convexity of $f$:
 $$
-f({\bf y})\geq f({\bf x})+\nabla f({\bf x})^\top({\bf y}-{\bf x})
+f(y)\geq f(x)+\nabla f(x)^\top(y-x)
 $$
 which can be derived from the Jensen's inequality, or a straightforward geometric interpretation.
 
@@ -58,83 +61,132 @@ We define Lipschitz continuity:
 
 **Definition**: A function $f:\mathbb{R}^n\rightarrow\mathbb{R}$ is called Lipschitz continuous if there exists a positive real constant $K$ such that
 $$
-\|f({\bf x})-f({\bf y})\|_2\leq K\|{\bf x}-{\bf y}\|_2,\ \forall {\bf x},{\bf y} \in \mathbb{R}^n.
+\|f(x)-f(y)\|_2\leq K\|x-y\|_2,\ \forall x,y \in \mathbb{R}^n.
 $$
 
 Here we need to assume the *gradient* of $f$ is Lipschitz continuous with constant $L$, i.e.
 $$
-\|\nabla f({\bf x})-\nabla f({\bf y})\|_2\leq L\|{\bf x}-{\bf y}\|_2,\ \forall {\bf x},{\bf y} \in \mathbb{R}^n.
+\|\nabla f(x)-\nabla f(y)\|_2\leq L\|x-y\|_2,\ \forall x,y \in \mathbb{R}^n.
 $$
-We can also say $\nabla f({\bf x})$ is L-Lipschitz in this case.
+We can also say $\nabla f(x)$ is L-Lipschitz in this case, or $f$ is L-smooth.
 
-**Lemma** The Lipschitz continuity of $\nabla f({\bf x})$ leads to
+**Lemma** The Lipschitz continuity of $\nabla f(x)$ leads to
 $$
-f({\bf y})\leq f({\bf x}) + \nabla f({\bf x})^\top({\bf y}-{\bf x})+ \frac{L}{2}\|{\bf x}-{\bf y}\|^2,\ \forall {\bf x},{\bf y}
+f(y)\leq f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2,\ \forall x,y
 $$
 **proof**
-We construct an auxiliary function $g(t)=f({\bf x}+t({\bf y}-{\bf x}))$, note $g(1)=f({\bf y})$ and $g(0)=f({\bf x})$. Furthermore,
+We construct an auxiliary function $g(t)=f(x+t(y-x))$, note $g(1)=f(y)$ and $g(0)=f(x)$. Furthermore,
 $$
-\nabla g(t)=\nabla f({\bf x}+t({\bf y}-{\bf x}))^\top({\bf y}-{\bf x})\\
-\Rightarrow \int_0^1 \nabla g(t)dt=g(1)-g(0)=f({\bf y})-f({\bf x})
+\nabla g(t)=\nabla f(x+t(y-x))^\top(y-x)\\
+\Rightarrow \int_0^1 \nabla g(t)dt=g(1)-g(0)=f(y)-f(x)
 $$
 We have
 $$\begin{aligned}
-&f({\bf y})- f({\bf x}) - \nabla f({\bf x})^\top({\bf y}-{\bf x})\\
-&=\int_0^1 \nabla f({\bf x}+t({\bf y}-{\bf x}))^\top({\bf y}-{\bf x})dt- \nabla f({\bf x})^\top({\bf y}-{\bf x})\\
-&=({\bf y}-{\bf x})^\top(\int_0^1 \nabla f({\bf x}+t({\bf y}-{\bf x}))dt-\nabla f({\bf x}))\\
-&=({\bf y}-{\bf x})^\top\int_0^1 (\nabla f({\bf x}+t({\bf y}-{\bf x}))-\nabla f({\bf x}))dt\\
-&\leq ({\bf y}-{\bf x})^\top\int_0^1 \|\nabla f({\bf x}+t({\bf y}-{\bf x}))-\nabla f({\bf x})\|dt\\
-&\leq ({\bf y}-{\bf x})^\top\int_0^1 \frac{L}{2}\|t({\bf y}-{\bf x})\|dt\\
-&=\frac{L}{2}\|{\bf y}-{\bf x}\|^2
+&f(y)- f(x) - \nabla f(x)^\top(y-x)\\
+&=\int_0^1 \nabla f(x+t(y-x))^\top(y-x)dt- \nabla f(x)^\top(y-x)\\
+&=(y-x)^\top(\int_0^1 \nabla f(x+t(y-x))dt-\nabla f(x))\\
+&=(y-x)^\top\int_0^1 (\nabla f(x+t(y-x))-\nabla f(x))dt\\
+&\leq (y-x)^\top\int_0^1 \|\nabla f(x+t(y-x))-\nabla f(x)\|dt\\
+&\leq (y-x)^\top\int_0^1 \frac{L}{2}\|t(y-x)\|dt\\
+&=\frac{L}{2}\|y-x\|^2
 \end{aligned}$$
-Note we use Cauchy Schwartz inequality in line 4-5, and the definition of Lipschitz continuity of $\nabla f({\bf x})$ in line 5-6.
+Note we use Cauchy Schwartz inequality in line 4-5, and the definition of Lipschitz continuity of $\nabla f(x)$ in line 5-6.
+
 Q.E.D
 
-**Theorem**: Gradient descend with a fixed step-size $t\leq 1/L$ satisifies
+Another **proof**: Since $f$ is convex, we can combine $f(y)\geq f(x)+\nabla f(x)^\top(y-x)$ and $f(x)\geq f(y)+\nabla f(y)^\top(x-y)$ to get 
 $$
-f({\bf x}^{(k)})-f({\bf x}^*)\leq \frac{\|{\bf x}^{(0)}-{\bf x}^*\|}{2tk}
+(\nabla f(x)-\nabla f(y))^\top (x-y) \geq 0
+$$
+We then construct $g(x)=\frac{L}{2}x^\top x-f(x)$.
+$$\begin{aligned}
+&\nabla g(x)-\nabla g(y) = L(x-y)-(\nabla f(x)-\nabla f(y))\\
+& \Rightarrow (\nabla g(x)-\nabla g(y))^\top (x-y)\\
+&=L(x-y)^\top(x-y)-(\nabla f(x)-\nabla f(y))^\top (x-y) \geq 0
+\end{aligned}$$
+we can claim $g(x)$ is convex, which means 
+$$\begin{aligned}
+& g(y) \geq g(x) + \nabla g(x)^\top (y-x)\\
+& \Rightarrow \frac{L}{2} y^\top y-f(y) \geq \frac{L}{2} x^\top x-f(x)+(Lx-\nabla f(x))^\top (y-x)\\
+& \Rightarrow f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2 \geq f(y)
+\end{aligned}$$
+Q.E.D
+
+A third **proof**: According to $\nabla f$ is Lipschitz continuous with constant $L$, $\|\nabla f(x)-\nabla f(y)\|_2\leq L\|x-y\|_2$, let $x=y+\Delta$ where $\Delta \rightarrow 0$, we have $\nabla^2 f \preceq LI$.
+
+For any $z \in dom f$,
+$$\begin{aligned}
+& \nabla^2 f(z) \preceq LI\\
+& \Rightarrow (x-y)^\top (\nabla^2 f(z)-LI) (x-y)\leq 0\\
+& \Rightarrow (x-y)^\top \nabla^2 f(z) (x-y)\leq L \|x-y\|^2
+\end{aligned}$$
+
+We can use Taylor’s Remainder Theorem:
+$$\begin{aligned}
+&f(y)= f(x) + \nabla f(x)^\top(y-x)+ \frac{1}{2}(x-y)^\top \nabla^2 f(x))(x-y) \\
+&\leq f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2
+\end{aligned}$$
+Q.E.D
+
+Note that the second and third proof are identical since when a convex function $f$ is twice differentiable, its Hessian is positive semidefite:
+$$
+\nabla^2 f(x) \succeq 0.
+$$
+Therefore, $\nabla^2 g \succeq 0 \rightarrow \nabla^2 f \preceq LI$.
+
+**Theorem**: Gradient descent with a fixed step-size $t\leq 1/L$ satisifies
+$$
+f(x^{(k)})-f(x^*)\leq \frac{\|x^{(0)}-x^*\|}{2tk}
 $$
 
-This theorem is the main theoretical result of gradient descend, which guarantees the algorithm has convergence rate $O(1/k)$. In other words, the algorithm guarantees to approximate the $\epsilon$-accuracy, i.e. $f({\bf x}^{(k)})-f({\bf x}^*)\leq \epsilon$ in $O(1/\epsilon)$ iterations.
+This theorem is the main theoretical result of gradient descent, which guarantees the algorithm has convergence rate $O(1/k)$. In other words, the algorithm guarantees to approximate the $\epsilon$-accuracy, i.e. $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\epsilon)$ iterations.
 
 **Proof**:
-Assume ${\bf y}={\bf x}-t\nabla f({\bf x})$ of above lemma, and a fixed step size $0<t\leq 1/L$ and $0< t\leq 1/L$,
+Assume $y=x-t\nabla f(x)$ of above lemma, and a fixed step size $0<t\leq 1/L$ and $0< t\leq 1/L$,
 $$
-f({\bf y})\leq f({\bf x})-t\|\nabla f({\bf x})\|^2+\frac{Lt^2}{2}\|\nabla f({\bf x})\|^2\\
-=f({\bf x})-t(1-\frac{Lt}{2})\|\nabla f({\bf x})\|^2
+f(y)\leq f(x)-t\|\nabla f(x)\|^2+\frac{Lt^2}{2}\|\nabla f(x)\|^2\\
+=f(x)-t(1-\frac{Lt}{2})\|\nabla f(x)\|^2
 $$
-Denote ${\bf x}^+={\bf x}-t\nabla f({\bf x})$, and note $Lt\leq 1$, we have
+Denote $x^+=x-t\nabla f(x)$, and note $Lt\leq 1$, we have
 $$\begin{aligned}
-&f({\bf x}^+)\leq f({\bf x})-\frac{t}{2}\|\nabla f({\bf x})\|^2\\
-&\leq f^*+f({\bf x})^\top({\bf x}-{\bf x}^*)-\frac{t}{2}\|\nabla f({\bf x})\|^2\\
-&=f^*+\frac{1}{2t}(\|{\bf x}-{\bf x}^*\|^2-\|{\bf x}-{\bf x}^*-t\nabla f({\bf x})\|^2)\\
-&=f^*+\frac{1}{2t}(\|{\bf x}-{\bf x}^*\|^2-\|{\bf x}^+-{\bf x}^*\|^2)
+&f(x^+)\leq f(x)-\frac{t}{2}\|\nabla f(x)\|^2\\
+&\leq f^*+f(x)^\top(x-x^*)-\frac{t}{2}\|\nabla f(x)\|^2\\
+&=f^*+\frac{1}{2t}(\|x-x^*\|^2-\|x-x^*-t\nabla f(x)\|^2)\\
+&=f^*+\frac{1}{2t}(\|x-x^*\|^2-\|x^+-x^*\|^2)
 \end{aligned}$$
 Note we apply the convexity inequality in 1-2 line.
 
-We now define ${\bf x}={\bf x}^{(i-1)}$ and ${\bf x}^+={\bf x}^{(i)}$, and sum over iterations:
+We now define $x=x^{(i-1)}$ and $x^+=x^{(i)}$, and sum over iterations:
 $$\begin{aligned}
-&\sum_{i=1}^k(f({\bf x}^{(i)})-f^*)\leq \frac{1}{2t}\sum_{i=1}^k(\|{\bf x}^{(i-1)}-{\bf x}^*\|^2-\|{\bf x}^{(i)}-{\bf x}^*\|^2)\\
-&=\frac{1}{2t}(\|{\bf x}^{(0)}-{\bf x}^*\|^2-\|{\bf x}^{(i)}-{\bf x}^*\|^2)\\
-&\leq \frac{1}{2t}(\|{\bf x}^{(0)}-{\bf x}^*\|^2)
+&\sum_{i=1}^k(f(x^{(i)})-f^*)\leq \frac{1}{2t}\sum_{i=1}^k(\|x^{(i-1)}-x^*\|^2-\|x^{(i)}-x^*\|^2)\\
+&=\frac{1}{2t}(\|x^{(0)}-x^*\|^2-\|x^{(i)}-x^*\|^2)\\
+&\leq \frac{1}{2t}(\|x^{(0)}-x^*\|^2)
 \end{aligned}$$
 
-Since $f({\bf x}^{(k)})$ is non-increasing, 
+Since $f(x^{(k)})$ is non-increasing, 
 $$
-f({\bf x}^{(k)})-f^* \leq
-\frac{1}{k}\sum_{i=1}^k(f({\bf x}^{(i)})-f^*)
-\leq \frac{1}{2tk}(\|{\bf x}^{(0)}-{\bf x}^*\|^2)
+f(x^{(k)})-f^* \leq
+\frac{1}{k}\sum_{i=1}^k(f(x^{(i)})-f^*)
+\leq \frac{1}{2tk}(\|x^{(0)}-x^*\|^2)
 $$
 Q.E.D
+
+# Subgradient method
+# Generalized gradient descent
 
 # Reference
 
 Boyd, Stephen, and Lieven Vandenberghe. Convex optimization. Cambridge university press, 2004.
 
-L. Vandenberghe's Lecture notes: http://www.seas.ucla.edu/~vandenbe/236C/lectures/gradient.pdf
+L. Vandenberghe's Lecture notes: http://www.seas.ucla.edu/~vandenbe/236C
 
 Strongly Convex: http://www.stronglyconvex.com/blog/gradient-descent.html
 
-Geoffrey J. Gordon. Gradient descent revisited: https://www.cs.cmu.edu/~ggordon/10725-F12/slides/05-gd-revisited.pdf
+Geoff Gordon and Ryan Tibshirani. https://www.cs.cmu.edu/~ggordon/10725-F12
 
-Marco Tulio Ribeiro's Blog: https://homes.cs.washington.edu/~marcotcr/blog/gradient-descent/
+Marco Tulio Ribeiro's Blog: https://homes.cs.washington.edu/~marcotcr/blog/gradient-descent
+
+<!-- Sebastien Bubeck's Blog: https://blogs.princeton.edu/imabandit/archives -->
+
+--
+Last update: `r Sys.setlocale("LC_TIME", "English"); format(Sys.Date(), "%B %d, %Y")`
