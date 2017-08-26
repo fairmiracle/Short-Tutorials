@@ -92,7 +92,7 @@ $$\begin{aligned}
 \end{aligned}$$
 Note we use Cauchy Schwartz inequality in line 4-5, and the definition of Lipschitz continuity of $\nabla f(x)$ in line 5-6.
 
-Q.E.D
+Q.E.D.
 
 Another **proof**: Since $f$ is convex, we can combine $f(y)\geq f(x)+\nabla f(x)^\top(y-x)$ and $f(x)\geq f(y)+\nabla f(y)^\top(x-y)$ to get 
 $$
@@ -110,7 +110,8 @@ $$\begin{aligned}
 & \Rightarrow \frac{L}{2} y^\top y-f(y) \geq \frac{L}{2} x^\top x-f(x)+(Lx-\nabla f(x))^\top (y-x)\\
 & \Rightarrow f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2 \geq f(y)
 \end{aligned}$$
-Q.E.D
+
+Q.E.D.
 
 A third **proof**: According to $\nabla f$ is Lipschitz continuous with constant $L$, $\|\nabla f(x)-\nabla f(y)\|_2\leq L\|x-y\|_2$, let $x=y+\Delta$ where $\Delta \rightarrow 0$, we have $\nabla^2 f \preceq LI$.
 
@@ -126,7 +127,8 @@ $$\begin{aligned}
 &f(y)= f(x) + \nabla f(x)^\top(y-x)+ \frac{1}{2}(x-y)^\top \nabla^2 f(x)(x-y) \\
 &\leq f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2
 \end{aligned}$$
-Q.E.D
+
+Q.E.D.
 
 Note that the second and third proof are identical since when a convex function $f$ is twice differentiable, its Hessian is positive semidefite:
 $$
@@ -169,19 +171,76 @@ f(x^{(k)})-f^* \leq
 \frac{1}{k}\sum_{i=1}^k(f(x^{(i)})-f^*)
 \leq \frac{1}{2tk}(\|x^{(0)}-x^*\|^2)
 $$
-Q.E.D
 
-<!-- # Subgradient method -->
-<!-- Sometimes a function is not differentiable at certain points, such as $\|x\|_1$ at 0. We still want to use gradient based approaches. Being similar to differentiable convex  -->
+Q.E.D.
 
-<!-- **Definition**: A subgradient of a convex function $f$ is $g\in \mathbb{R}^n$ such that -->
-<!-- $$ -->
-<!-- f(y)\geq f(x)+g^\top(y-x) -->
-<!-- $$ -->
-<!-- **Definition**: A subdifferential is a closed convex set of all subgradients of a convex function $f$: -->
-<!-- $$ -->
-<!-- \partial f(x)=\{g\in \mathbb{R}^n: g \textrm{ is a subgradient of }f \textrm{ at } x\} -->
-<!-- $$ -->
+# Subgradient method
+Sometimes a function is not differentiable at certain points, such as $\|x\|_1$ at 0. We still want to use gradient based approaches. Being similar to the differentiable convex functions, we have
+
+**Definition**: A subgradient of a convex function $f$ is $g\in \mathbb{R}^n$ such that
+$$
+f(y)\geq f(x)+g^\top(y-x)
+$$
+**Definition**: A subdifferential is a closed convex set of all subgradients of a convex function $f$:
+$$
+\partial f(x)=\{g\in \mathbb{R}^n: g \textrm{ is a subgradient of }f \textrm{ at } x\}
+$$
+
+The subgradient descent: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
+$$x^{(k)}=x^{(k-1)}-t_k g^{(k-1)},\ k=1,2,3...$$
+until some stopping criteria is satisified. Where $g^{(k-1)}$ is any subgradient of $f$ at $x^{(k-1)}$. $t_k$ is the step size at $k$-th iteration, which can be picked as fixed or flexible.
+
+## Convergence analysis
+We assume the convex function $f$ satistifes:
+
+- $f$ is Lipschitz continuous with constant $L$.
+  $$
+  \|f(x)-f(y)\|_2\leq L\|x-y\|_2,\ \forall x,y \in \mathbb{R}^n.
+  $$
+- $\|x^{(1)}-x^*\|_2\leq R$ which means it is bounded.
+
+**Theorem**: Subgradient gradient descent with a fixed step-size $t$ satisifies
+$$
+\lim_{k\to\infty} f(x^{(k)}_{best})\leq f(x^*)+\frac{L^2t}{2}
+$$
+
+
+**Proof**: 
+$$\begin{aligned}
+\|x^{(k+1)}-x^*\|^2&=\|x^{(k)}-t_k g^{(k)}-x^*\|^2\\
+&=\|x^{(k)}-x^*\|^2-2t_k g^{(k)\top} (x^{(k)}-x^*)+t_k^2 \|g^{(k)}\|^2
+\end{aligned}$$
+
+By the definition of subgradient we have
+$$\begin{aligned}
+&f(x^*)\geq f(x)+g^\top(x^*-x)\\
+&\Rightarrow -g^{(k)\top} (x^{(k)}-x^*) \leq f(x^*)- f(x^{(k)})
+\end{aligned}$$
+
+we now have
+$$\begin{aligned}
+\|x^{(k+1)}-x^*\|^2 & \leq \|x^{(k)}-x^*\|^2+2t_k(f(x^*)- f(x^{(k)}))+t_k^2 \|g^{(k)}\|^2\\
+& \leq \|x^{(1)}-x^*\|^2+2\sum_{i=1}^kt_i(f(x^*)- f(x^{(i)}))+\sum_{i=1}^kt_i^2 \|g^{(i)}\|^2\\
+& \leq R^2+2\sum_{i=1}^kt_i(f(x^*)- f(x^{(i)}))+\sum_{i=1}^kt_i^2 \|g^{(i)}\|^2\\
+\end{aligned}$$
+Since $\|x^{(k+1)}-x^*\|^2 \geq 0$
+$$\begin{aligned}
+&2\sum_{i=1}^kt_i(f(x^{(i)})-f(x^*))\leq R^2+\sum_{i=1}^kt_i^2 \|g^{(i)}\|^2\\
+\Rightarrow & 2(\sum_{i=1}^kt_i)(f(x^{(k)}_{best})-f(x^*))\leq R^2+\sum_{i=1}^kt_i^2 L^2
+\end{aligned}$$
+
+- For a fixed step size:
+$$
+\lim_{k\to \infty} \frac{R^2+kt^2 L^2}{2tk}=\frac{L^2t}{2}
+$$
+- For a specific step size: $t_i=R/(L\sqrt{k})$
+$$
+\frac{R^2+\sum_{i=1}^kt_i^2 L^2}{2(\sum_{i=1}^kt_i)}=\frac{RL}{\sqrt{k}}
+$$
+
+The algorithm has convergence rate $O(1/\sqrt{k})$ or get $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\epsilon^2)$ iterations.
+
+Q.E.D.
 
 # Generalized gradient descent
 Before we start, refer to the third proof of Lemma in gradient descent, we use the quadratic approximation for a convex function $f$ at certain point. 
@@ -298,7 +357,7 @@ $$\begin{aligned}
 \end{aligned}$$
 We should stop here because everything keeps the same as in the proof of gradient descent, except that we replace $\nabla f(x)$ with $G_t(x)$.
 
-Q.E.D
+Q.E.D.
 
 
 # Acceleration
@@ -320,9 +379,19 @@ $$
 
 It has the same convergence rate $O(1/k^2)$, or it gets $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\sqrt{\epsilon})$ iterations.
 
+Before we carry on, let's have a look at the performances of three different algrothms: subgradient ($O(1/\sqrt{k}$), proximal gradient ($O(1/k)$) and accelerated gradient $O(1/k^2)$.
+
+
 
 # Endnote
-This post is about the first-order methods, based on gradient descent. The convergence analysis for generalized gradient descent is also similar to gradient descent.
+This post is about the first-order methods, based on gradient descent. The covergence rates:
+
+|  Algorithm   | Function  | Condition | Convergence rate   |
+|-----+--------------+-----------------+---------|
+| Gradient desent  | $f(x)$   | convex, differentiable, L-smooth  | $O(1/k)$ |
+| Subgradient desent | $f(x)=g(x)+h(x)$ | $f$: convex, differentiable, L-smooth, $g$:convex  | $O(1/\sqrt{k})$ |
+| Generalized gradient desent | $f(x)=g(x)+h(x)$ | $f$: convex, differentiable, L-smooth, $g$:convex   | $O(1/k)$ |
+| Accelerated gradient desent    | $f(x)=g(x)+h(x)$   | $f$: convex, differentiable, L-smooth, $g$:convex | $O(1/k^2)$ |
 
 # Reference
 
