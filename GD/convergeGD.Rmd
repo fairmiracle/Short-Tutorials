@@ -123,7 +123,7 @@ $$\begin{aligned}
 
 We can use Taylor’s Remainder Theorem:
 $$\begin{aligned}
-&f(y)= f(x) + \nabla f(x)^\top(y-x)+ \frac{1}{2}(x-y)^\top \nabla^2 f(x))(x-y) \\
+&f(y)= f(x) + \nabla f(x)^\top(y-x)+ \frac{1}{2}(x-y)^\top \nabla^2 f(x)(x-y) \\
 &\leq f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2
 \end{aligned}$$
 Q.E.D
@@ -136,7 +136,7 @@ Therefore, $\nabla^2 g \succeq 0 \rightarrow \nabla^2 f \preceq LI$.
 
 **Theorem**: Gradient descent with a fixed step-size $t\leq 1/L$ satisifies
 $$
-f(x^{(k)})-f(x^*)\leq \frac{\|x^{(0)}-x^*\|}{2tk}
+f(x^{(k)})-f(x^*)\leq \frac{\|x^{(0)}-x^*\|^2}{2tk}
 $$
 
 This theorem is the main theoretical result of gradient descent, which guarantees the algorithm has convergence rate $O(1/k)$. In other words, the algorithm guarantees to approximate the $\epsilon$-accuracy, i.e. $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\epsilon)$ iterations.
@@ -171,9 +171,158 @@ f(x^{(k)})-f^* \leq
 $$
 Q.E.D
 
-# Subgradient method
+<!-- # Subgradient method -->
+<!-- Sometimes a function is not differentiable at certain points, such as $\|x\|_1$ at 0. We still want to use gradient based approaches. Being similar to differentiable convex  -->
+
+<!-- **Definition**: A subgradient of a convex function $f$ is $g\in \mathbb{R}^n$ such that -->
+<!-- $$ -->
+<!-- f(y)\geq f(x)+g^\top(y-x) -->
+<!-- $$ -->
+<!-- **Definition**: A subdifferential is a closed convex set of all subgradients of a convex function $f$: -->
+<!-- $$ -->
+<!-- \partial f(x)=\{g\in \mathbb{R}^n: g \textrm{ is a subgradient of }f \textrm{ at } x\} -->
+<!-- $$ -->
 
 # Generalized gradient descent
+Before we start, refer to the third proof of Lemma in gradient descent, we use the quadratic approximation for a convex function $f$ at certain point. 
+$$\begin{aligned}
+f(x) + \nabla f(x)^\top(z-x)+ \frac{1}{2}(z-x)^\top \nabla^2 f(x)(z-x)
+\end{aligned}$$
+
+By replacing the $\nabla^2 g$ by $I/t$ we can derive the radient update rule (with fixed step size $t$)
+$$\begin{aligned}
+& x^+=\arg\min_z f(x) + \nabla f(x)^\top(z-x)+ \frac{1}{2t}\|z-x\|^2\\
+& \Rightarrow x^+= x-t \nabla f(x)
+\end{aligned}$$
+
+The gradient descent can be generalized to work for a class of general functions:
+$$
+f(x)=g(x)+h(x)
+$$
+where $g(x)$ is convex and differentiable while $h(x)$ is convex but not differentiable. It is common in machine learning since a dozen of classical models can be expressed as "loss+regularization" when the regularization may not be differentiable everywhere (such as $\ell_1$-norm).
+
+Here we can do the same quadratic approximation for differentiable part $g(x)$, but keep the other part $h(x)$ unchanged for now, the update rule is
+$$\begin{aligned}
+&x^+ =\arg\min_z g(x) + \nabla g(x)^\top(z-x)+ \frac{1}{2t}\|z-x\|^2+h(z)\\
+& = \arg\min_z \frac{1}{2t}\|z-(x-t\nabla g(x))\|^2+h(z)
+\end{aligned}$$
+
+Note the operator 
+$$\begin{aligned}
+{\rm prox}_h(x)=\arg\min_z \frac{1}{2}\|z-x\|^2+h(z)
+\end{aligned}$$
+is also called proximal mapping or prox-operator of convex function $h$. Examples include:
+
+ - $h$ is indicator function of closed convex set $C$, then ${\rm prox}_h$ is a projection on $C$:
+ $$\begin{aligned}
+ {\rm prox}_h(x)=P_C(x)=\arg\min_{u\in C}\|u-x\|^2
+ \end{aligned}$$
+ 
+ - $h(x)=\|x\|_1$, ${\rm prox}_h$ is the soft-threshold operator:
+$$\begin{aligned}
+{\rm prox}_h(x)_i=\left\{
+  \begin{array}{ll}
+    x_i-1 & x_i\geq 1\\
+    0 & |x_i|< 1\\
+    x_i+1 & x_i\leq -1
+  \end{array}
+\right.
+\end{aligned}$$
+
+It is also called **proximal gradient desent**.
+
+The algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
+
+$$\begin{aligned}
+& x^+=x^{(k-1)}-t_k\nabla f(x^{(k-1)})\\
+& x^{(k)}= {\rm prox}_h(x^+)
+\end{aligned}$$
+until some stopping criteria is satisified.
+
+The updating rule can be rewritten in a similar way to gradient descent:
+$$\begin{aligned}
+x^{(k)}=x^{(k-1)}-t_kG_{t_k}(x^{(k-1)})
+\end{aligned}$$
+where
+$$\begin{aligned}
+G_t(x)=\frac{x-{\rm prox}_h(x-t\nabla g(x))}{t}
+\end{aligned}$$
+
+## Convergence analysis
+Assume $g$ has the same properties as in previous section, and $h$ is convex and ${\rm prox}_h$ is cheap to calculate, then we have
+**Lemma** The Lipschitz continuity of $\nabla g(x)$ leads to
+$$
+f(y)\leq g(x) + \nabla g(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2+h(y),\ \forall x,y
+$$
+The proof keeps the same.
+
+**Theorem**: Generalized gradient descent with a fixed step-size $t\leq 1/L$ satisifies
+$$
+f(x^{(k)})-f(x^*)\leq \frac{\|x^{(0)}-x^*\|^2}{2tk}
+$$
+
+It has the same convergence rate $O(1/k)$ as gradient descent.
+
+**Proof**:
+Assume $y=x^+=x-tG_t(x)$ of above lemma, and a fixed step size $0<t\leq 1/L$,
+$$
+f(x^+)\leq g(x)-t\nabla g(x)^\top G_t(x)+\frac{Lt^2}{2}\|G_t(x)\|^2+h(x-tG_t(x))
+$$
+Note in the updating rule
+$$\begin{aligned}
+x^+ = x-tG_t(x) &=\arg\min_z \frac{1}{2t}\|z-(x-t\nabla g(x))\|^2+h(z)\\
+& = \arg\min_z \nabla g(x)^\top (z-x)+\frac{1}{2t}\|z-x\|^2+h(z)
+\end{aligned}$$
+
+Since $h(z)$ is not differentiable, the minimum occurs when
+$$
+\nabla g(x)+\frac{1}{t}(z-x)+v=0
+$$
+where $v\in \partial h(z)$.
+Also note $z=x-tG_t(x)$. We get
+$$\begin{aligned}
+& \nabla g(x)-G_t(x)+v=0\\
+& \Rightarrow G_t(x)-g(x) \in \partial h(x-tG_t(x))
+\end{aligned}$$
+Since $h$ is convex
+$$\begin{aligned}
+& h(x)\geq h(x-tG_t(x))+(G_t(x)-g(x))^\top tG_t(x)\\
+& \Rightarrow h(x-tG_t(x)) \leq h(x)-t(G_t(x)-g(x))^\top G_t(x)
+\end{aligned}$$
+
+We carry on the beginning of this proof,
+$$\begin{aligned}
+&f(x^+)\leq g(x)-t\nabla g(x)^\top G_t(x)+\frac{Lt^2}{2}\|G_t(x)\|^2+h(x)-t(G_t(x)-g(x))^\top G_t(x)\\
+& = f(x)+t(1-\frac{Lt}{2})\|G_t(x)\|^2\\
+&\leq f(x)-\frac{t}{2}\|G_t(x)\|^2\\
+\end{aligned}$$
+We should stop here because everything keeps the same as in the proof of gradient descent, except that we replace $\nabla f(x)$ with $G_t(x)$.
+
+Q.E.D
+
+
+# Acceleration
+
+The generalized gradient descent (of course including the simple gradient descent) can be accelerated by using Nesterov's method. The idea is to use a linear combination of previous two steps instead of one, to compute a candidate solution.
+
+The algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
+
+$$\begin{aligned}
+& v=x^{(k-1)}+\frac{k-2}{k+1}(x^{(k-1)}-x^{(k-2)})\\
+& x^{(k)}= {\rm prox}_h(v-t_k\nabla g(v))
+\end{aligned}$$
+until some stopping criteria is satisified.
+
+**Theorem**: Accelerated gradient descent with a fixed step-size $t\leq 1/L$ satisifies
+$$
+f(x^{(k)})-f(x^*)\leq \frac{2\|x^{(0)}-x^*\|^2}{t(k+1)^2}
+$$
+
+It has the same convergence rate $O(1/k^2)$, or it gets $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\sqrt{\epsilon})$ iterations.
+
+
+# Endnote
+This post is about the first-order methods, based on gradient descent. The convergence analysis for generalized gradient descent is also similar to gradient descent.
 
 # Reference
 
