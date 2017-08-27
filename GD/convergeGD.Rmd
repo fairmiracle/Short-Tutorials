@@ -122,7 +122,7 @@ $$\begin{aligned}
 & \Rightarrow (x-y)^\top \nabla^2 f(z) (x-y)\leq L \|x-y\|^2
 \end{aligned}$$
 
-We can use Taylor’s Remainder Theorem:
+We can use Taylor's Remainder Theorem:
 $$\begin{aligned}
 &f(y)= f(x) + \nabla f(x)^\top(y-x)+ \frac{1}{2}(x-y)^\top \nabla^2 f(x)(x-y) \\
 &\leq f(x) + \nabla f(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2
@@ -179,7 +179,7 @@ Sometimes a function is not differentiable at certain points, such as $\|x\|_1$ 
 
 **Definition**: A subgradient of a convex function $f$ is $g\in \mathbb{R}^n$ such that
 $$
-f(y)\geq f(x)+g^\top(y-x)
+f(y)\geq f(x)+g^\top(y-x),\  \forall x,y \in \mathbb{R}^n.
 $$
 **Definition**: A subdifferential is a closed convex set of all subgradients of a convex function $f$:
 $$
@@ -272,10 +272,21 @@ $$\begin{aligned}
 \end{aligned}$$
 is also called proximal mapping or prox-operator of convex function $h$. Examples include:
 
- - $h$ is indicator function of closed convex set $C$, then ${\rm prox}_h$ is a projection on $C$:
+ - $h$ is indicator function of closed convex set $C$, where
  $$\begin{aligned}
- {\rm prox}_h(x)=P_C(x)=\arg\min_{u\in C}\|u-x\|^2
+h(x)=I_C(x)=\left\{
+  \begin{array}{ll}
+    0 & x\in C\\
+    \infty & x\notin C
+  \end{array}
+\right.
+\end{aligned}$$
+
+ Then ${\rm prox}_h$ is a projection on $C$:
+ $$\begin{aligned}
+ {\rm prox}_h(x)=P_C(x)=\arg\min_{z\in C}\|z-x\|^2
  \end{aligned}$$
+ It is also called **projected gradient descent**.
  
  - $h(x)=\|x\|_1$, ${\rm prox}_h$ is the soft-threshold operator:
 $$\begin{aligned}
@@ -288,9 +299,9 @@ $$\begin{aligned}
 \right.
 \end{aligned}$$
 
-It is also called **proximal gradient desent**.
+It is also called Iterative Soft-Thresholding Algorithm (ISTA) or **proximal gradient desent**.
 
-The algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
+The generalized gradient desent algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
 
 $$\begin{aligned}
 & x^+=x^{(k-1)}-t_k\nabla f(x^{(k-1)})\\
@@ -316,6 +327,7 @@ $$
 The proof keeps the same.
 
 **Theorem**: Generalized gradient descent with a fixed step-size $t\leq 1/L$ satisifies
+
 $$
 f(x^{(k)})-f(x^*)\leq \frac{\|x^{(0)}-x^*\|^2}{2tk}
 $$
@@ -372,26 +384,105 @@ $$\begin{aligned}
 \end{aligned}$$
 until some stopping criteria is satisified.
 
-**Theorem**: Accelerated gradient descent with a fixed step-size $t\leq 1/L$ satisifies
+## Convergence analysis
+
+**Theorem**: Accelerated generalized gradient descent with a fixed step-size $t\leq 1/L$ satisifies
 $$
 f(x^{(k)})-f(x^*)\leq \frac{2\|x^{(0)}-x^*\|^2}{t(k+1)^2}
 $$
 
 It has the same convergence rate $O(1/k^2)$, or it gets $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\sqrt{\epsilon})$ iterations.
 
-Before we carry on, let's have a look at the performances of three different algrothms: subgradient ($O(1/\sqrt{k}$), proximal gradient ($O(1/k)$) and accelerated gradient $O(1/k^2)$.
+**Proof**: Since $t\leq 1/L$ we have
+$$\begin{aligned}
+& g(x^+)\leq g(y) + \nabla g(y)^\top (x^+-y)+ \frac{L}{2}\|x^+-y\|^2\\
+& \leq g(y) + \nabla g(y)^\top (x^+-y)+ \frac{1}{2t}\|x^+-y\|^2
+\end{aligned}$$
 
+Suppose we have 
+$$\begin{aligned}
+&v = {\rm prox}_{h,t}(x)=\arg\min_z \frac{1}{2t}\|x-v\|^2+h(v)\\
+&\Rightarrow 0 \in \partial ( \frac{1}{2t}\|x-v\|^2+h(v))= -\frac{1}{t}(x-v)+ \partial h(v)\\
+&\Rightarrow -\frac{1}{t}(x-v)\in \partial h(v)\\
+&\Rightarrow h(z) \geq h(v) - \frac{1}{t}(x-v)^\top (z-v)\, \forall z\\
+&\Rightarrow h(v) \leq h(z) + \frac{1}{t}(x-v)^\top (z-v)\, \forall z
+\end{aligned}$$
 
+Note that we use the definition of subgradient in Line 3-4.
+
+Now we use $x^+ = {\rm prox}_{h,t}(y-t\nabla g(y))$, 
+$$\begin{aligned}
+&h(x^+) \leq h(z) + \frac{1}{t}(x^+-y+t\nabla g(y))^\top (z-x^+)\, \forall z\\
+& = h(z) + \frac{1}{t}(x^+-y)^\top (z-x^+) + \nabla g(y)^\top (z-x^+)\, \forall z
+\end{aligned}$$
+
+Combing $h(x^+)$ and $g(x^+)$ we have
+$$\begin{aligned}
+&f(x^+) \leq  g(y) + h(z)+ \frac{1}{2t}\|x^+-y\|^2+ \frac{1}{t}(x^+-y)^\top (z-x^+) + \nabla g(y)^\top (z-y)\\
+& \leq  h(z)+ g(z)+\frac{1}{2t}\|x^+-y\|^2+\frac{1}{t}(x^+-y)^\top (z-x^+)\\
+& = f(z)+\frac{1}{2t}\|x^+-y\|^2+\frac{1}{t}(x^+-y)^\top (z-x^+)
+\end{aligned}$$
+Note we use $g(y)+ \nabla g(y)^\top (z-y) \leq  g(z)$ because of convexity of $g$ in line 1-2.
+
+The following constructions are quite tricky. 
+
+Let $z=x$ and $z=x^*$, multiply both sides by $1-\theta$ and $\theta$ respectively,
+
+$$\begin{aligned}
+&(1-\theta) f(x^+) \leq (1-\theta) f(x)+\frac{1-\theta}{2t}\|x^+-y\|^2+\frac{1-\theta}{t}(x^+-y)^\top (x-x^+)\\
+&\theta f(x^+) \leq \theta f(x^*)+\frac{\theta}{2t}\|x^+-y\|^2+\frac{\theta}{t}(x^+-y)^\top (x^*-x^+)\\
+&f(x^+) \leq (1-\theta)f(x)+\theta f(x^*)+\frac{1}{t}(x^+-y)^\top ((1-\theta)x-x^+ + \theta x^*)+\frac{1}{2t}\|x^+-y\|^2\\
+& = f(x^*) + (1-\theta)(f(x)-f(x^*)) +\frac{1}{t}(x^+-y)^\top ((1-\theta)x-x^+ + \theta x^*)+\frac{1}{2t}\|x^+-y\|^2
+\end{aligned}$$
+
+Using $u^+=x+\frac{1}{\theta}(x^+-x)$ and $y=(1-\theta)x+\theta u$, we have
+$(1-\theta)x+\theta x^*-x^+=\theta(x^*-u^*)$ and $x^+-y=\theta(u^+-u)$, substitute these equations we have
+$$\begin{aligned}
+\begin{array}{ll}
+f(x^+)-f(x^*)-(1-\theta)(f(x)-f(x^*))&\leq \dfrac{\theta}{2t}(u^+-u)^\top [2\theta(x^*-u^+)+\theta(u^+-u)]\\[8pt]
+&=\dfrac{\theta^2}{2t}[(x^*-u)-(x^*-u^+)]^\top[(x^*-u^+)+(x^*-u)]\\[8pt]
+&=\dfrac{\theta^2}{2t}(||x^*-u||^2-||x^*-u^+||^2)\\
+\end{array}
+\end{aligned}$$
+
+Back to $k$ notation we have:
+$$\begin{aligned}
+\dfrac{t}{\theta_k^2}(f(x^{(k)})-f(x^*))+\dfrac{1}{2}||u^{(k)}-x^*||^2
+\leq \dfrac{t(1-\theta_k)}{\theta_k^2}(f(x^{(k-1)})-f(x^*))+\dfrac{1}{2}||u^{(k-1)}-x^*||^2
+\end{aligned}$$
+
+Using $\frac{1-\theta_k}{\theta^2_k}\leq \frac{1}{\theta^2_{k-1}}$ we have
+$$\begin{aligned}
+\dfrac{t}{\theta_k^2}(f(x^{(k)})-f(x^*))+\dfrac{1}{2}||u^{(k)}-x^*||^2
+\leq \dfrac{t}{\theta_{k-1}^2}(f(x^{(k-1)})-f(x^*))+\dfrac{1}{2}||u^{(k-1)}-x^*||^2
+\end{aligned}$$
+
+Iterate this inequality and use $\theta_1=1, u^{(0)}=x^{(0)}$ we get
+$$\begin{aligned}
+\dfrac{t}{\theta_k^2}(f(x^{(k)})-f(x^*))+\dfrac{1}{2}||u^{(k)}-x^*||^2
+\leq \dfrac{t(1-\theta_1)}{\theta_1^2}(f(x^{(0)})-f(x^*))+\dfrac{1}{2}||u^{(0)}-x^*||^2=\dfrac{1}{2}||x^{(0)}-x^*||^2
+\end{aligned}$$
+
+Hence we conclude
+$$\begin{aligned}
+f(x^{(k)})-f(x^*)\leq \dfrac{\theta_k^2}{2t}||x^{(0)}-x^*||^2 = \dfrac{2||x^{(0)}-x^*||^2}{t(k+1)^2}
+\end{aligned}$$
+
+Q.E.D.
 
 # Endnote
-This post is about the first-order methods, based on gradient descent. The covergence rates:
+This post is about the first-order methods, based on gradient descent. Compare these algorithms regarding assumption and covergence rate:
 
 |  Algorithm   | Function  | Condition | Convergence rate   |
-|-----+--------------+-----------------+---------|
-| Gradient desent  | $f(x)$   | convex, differentiable, L-smooth  | $O(1/k)$ |
+|----------+--------------+----------------------+--------------|
+| Gradient desent  | $f(x)$   | $f$: convex, differentiable, L-smooth  | $O(1/k)$ |
 | Subgradient desent | $f(x)=g(x)+h(x)$ | $f$: convex, differentiable, L-smooth, $g$:convex  | $O(1/\sqrt{k})$ |
 | Generalized gradient desent | $f(x)=g(x)+h(x)$ | $f$: convex, differentiable, L-smooth, $g$:convex   | $O(1/k)$ |
 | Accelerated gradient desent    | $f(x)=g(x)+h(x)$   | $f$: convex, differentiable, L-smooth, $g$:convex | $O(1/k^2)$ |
+
+Table: A summary of first-order methods.
+
+Acceleration seems work perfectly, but not all problems are suitable to be accelerated. Even subgradient method has slower convergence rate, it works when the proximal operator is expensive.
 
 # Reference
 
