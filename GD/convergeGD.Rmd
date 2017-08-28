@@ -1,5 +1,5 @@
 ---
-title: "Why it converges: gradient descent"
+title: "A brief on first-order methods"
 author: "Dong Li"
 date: "15 August 2017"
 output:
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 > A method of writing proofs is proposed that makes it much harder to prove
 things that are not true. -- Leslie Lamport. "How to write a proof." 1993
 
-Gradient descent is probably the most intuitive optimization algorithm. Just like the other methods, first we use it for granted, then we try to figure out why it works. The most important part of this reasoning is to prove it rigorously, which has been completed by mathematicians long time ago, and been  repeated again and again by many people. But it is still necessary to write it down myself, to enhance my understanding.
+Gradient descent is probably the most intuitive optimization algorithm. It is also the foundation of the first-order optimization algorithms. Just like the other methods, first we use it for granted, then we try to figure out why it works. The most important part of this reasoning is to prove it rigorously, which has been completed by mathematicians long time ago, and been repeated again and again by many people. But it is still necessary to write it down myself, to enhance my understanding.
 
 # Basic gradient descent
 
@@ -270,8 +270,10 @@ Note the operator
 $$\begin{aligned}
 {\rm prox}_h(x)=\arg\min_z \frac{1}{2}\|z-x\|^2+h(z)
 \end{aligned}$$
-is also called proximal mapping or prox-operator of convex function $h$. Examples include:
+is also called proximal mapping or prox-operator of convex function $h$. So the generalized gradient descent is also called **proximal gradient desent**. Examples include:
 
+ - $h=0$, it becomes normal **gradient desent**.
+ 
  - $h$ is indicator function of closed convex set $C$, where
  $$\begin{aligned}
 h(x)=I_C(x)=\left\{
@@ -299,7 +301,7 @@ $$\begin{aligned}
 \right.
 \end{aligned}$$
 
-It is also called Iterative Soft-Thresholding Algorithm (ISTA) or **proximal gradient desent**.
+It is also called Iterative Soft-Thresholding Algorithm (ISTA).
 
 The generalized gradient desent algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
 
@@ -320,6 +322,7 @@ G_t(x)=\frac{x-{\rm prox}_h(x-t\nabla g(x))}{t}
 
 ## Convergence analysis
 Assume $g$ has the same properties as in previous section, and $h$ is convex and ${\rm prox}_h$ is cheap to calculate, then we have
+
 **Lemma** The Lipschitz continuity of $\nabla g(x)$ leads to
 $$
 f(y)\leq g(x) + \nabla g(x)^\top(y-x)+ \frac{L}{2}\|x-y\|^2+h(y),\ \forall x,y
@@ -391,7 +394,7 @@ $$
 f(x^{(k)})-f(x^*)\leq \frac{2\|x^{(0)}-x^*\|^2}{t(k+1)^2}
 $$
 
-It has the same convergence rate $O(1/k^2)$, or it gets $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\sqrt{\epsilon})$ iterations.
+It has the convergence rate $O(1/k^2)$, or it gets $f(x^{(k)})-f(x^*)\leq \epsilon$ in $O(1/\sqrt{\epsilon})$ iterations.
 
 **Proof**: Since $t\leq 1/L$ we have
 $$\begin{aligned}
@@ -474,21 +477,21 @@ Q.E.D.
 This post is about the first-order methods, based on gradient descent. Compare these algorithms regarding assumption and covergence rate:
 
 |  Algorithm   | Function  | Condition | Convergence rate   |
-|----------+--------------+----------------------+--------------|
+|-------------+--------------+------------------------+-----------|
 | Gradient desent  | $f(x)$   | $f$: convex, differentiable, L-smooth  | $O(1/k)$ |
-| Subgradient desent | $f(x)=g(x)+h(x)$ | $f$: convex, differentiable, L-smooth, $g$:convex  | $O(1/\sqrt{k})$ |
-| Generalized gradient desent | $f(x)=g(x)+h(x)$ | $f$: convex, differentiable, L-smooth, $g$:convex   | $O(1/k)$ |
-| Accelerated gradient desent    | $f(x)=g(x)+h(x)$   | $f$: convex, differentiable, L-smooth, $g$:convex | $O(1/k^2)$ |
+| Subgradient desent | $f(x)=g(x)+h(x)$ | $g$: convex, differentiable, L-smooth; $h$:convex  | $O(1/\sqrt{k})$ |
+| Generalized gradient desent | $f(x)=g(x)+h(x)$ | $g$: convex, differentiable, L-smooth; $h$:convex; ${\rm prox}_h(x)$ is cheap   | $O(1/k)$ |
+| Accelerated gradient desent    | $f(x)=g(x)+h(x)$   | $g$: convex, differentiable, L-smooth; $h$:convex; ${\rm prox}_h(x)$ is cheap | $O(1/k^2)$ |
 
 Table: A summary of first-order methods.
 
-Acceleration seems work perfectly, but not all problems are suitable to be accelerated. Even subgradient method has slower convergence rate, it works when the proximal operator is expensive.
+Acceleration seems work perfectly, but not all problems are suitable to be accelerated. Even subgradient method has slower convergence rate, it works when the proximal operator ${\rm prox}_h(x)$ is expensive.
 
 # Reference
 
 Boyd, Stephen, and Lieven Vandenberghe. Convex optimization. Cambridge university press, 2004.
 
-L. Vandenberghe's Lecture notes: http://www.seas.ucla.edu/~vandenbe/236C
+Lieven Vandenberghe: http://www.seas.ucla.edu/~vandenbe/236C
 
 Strongly Convex: http://www.stronglyconvex.com/blog/gradient-descent.html
 
