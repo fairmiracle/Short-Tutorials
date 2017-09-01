@@ -242,7 +242,7 @@ The algorithm has convergence rate $O(1/\sqrt{k})$ or get $f(x^{(k)})-f(x^*)\leq
 
 Q.E.D.
 
-# Generalized gradient descent
+# Proximal gradient descent
 Before we start, refer to the third proof of Lemma in gradient descent, we use the quadratic approximation for a convex function $f$ at certain point. 
 $$\begin{aligned}
 f(x) + \nabla f(x)^\top(z-x)+ \frac{1}{2}(z-x)^\top \nabla^2 f(x)(z-x)
@@ -270,9 +270,9 @@ Note the operator
 $$\begin{aligned}
 {\rm prox}_h(x)=\arg\min_z \frac{1}{2}\|z-x\|^2+h(z)
 \end{aligned}$$
-is also called proximal mapping or prox-operator of convex function $h$. So the generalized gradient descent is also called **proximal gradient desent**. Examples include:
+is also called proximal mapping or prox-operator of convex function $h$. Examples of prox-operator include:
 
- - $h=0$, it becomes normal **gradient desent**.
+ - $h=0$, it becomes normal **gradient descent**.
  
  - $h$ is indicator function of closed convex set $C$, where
  $$\begin{aligned}
@@ -301,9 +301,9 @@ $$\begin{aligned}
 \right.
 \end{aligned}$$
 
-It is also called Iterative Soft-Thresholding Algorithm (ISTA).
+It is also called Iterative Soft-Thresholding Algorithm (**ISTA**).
 
-The generalized gradient desent algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
+The proximal gradient descent algorithm: start with an initial $x^{(0)}\in\mathbb{R}^n$, repeat
 
 $$\begin{aligned}
 & x^+=x^{(k-1)}-t_k\nabla f(x^{(k-1)})\\
@@ -348,12 +348,11 @@ x^+ = x-tG_t(x) &=\arg\min_z \frac{1}{2t}\|z-(x-t\nabla g(x))\|^2+h(z)\\
 & = \arg\min_z \nabla g(x)^\top (z-x)+\frac{1}{2t}\|z-x\|^2+h(z)
 \end{aligned}$$
 
-Since $h(z)$ is not differentiable, the minimum occurs when
+Since $h(z)$ is not differentiable, the optimality condition is
 $$
 \nabla g(x)+\frac{1}{t}(z-x)+v=0
 $$
-where $v\in \partial h(z)$.
-Also note $z=x-tG_t(x)$. We get
+where $v\in \partial h(z)$. Also note $z=x-tG_t(x)$. We get
 $$\begin{aligned}
 & \nabla g(x)-G_t(x)+v=0\\
 & \Rightarrow G_t(x)-g(x) \in \partial h(x-tG_t(x))
@@ -478,10 +477,10 @@ This post is about the first-order methods, based on gradient descent. Compare t
 
 |  Algorithm   | Function  | Condition | Convergence rate   |
 |-------------+--------------+------------------------+-----------|
-| Gradient desent  | $f(x)$   | $f$: convex, differentiable, L-smooth  | $O(1/k)$ |
-| Subgradient desent | $f(x)=g(x)+h(x)$ | $g$: convex, differentiable, L-smooth; $h$:convex  | $O(1/\sqrt{k})$ |
-| Generalized gradient desent | $f(x)=g(x)+h(x)$ | $g$: convex, differentiable, L-smooth; $h$:convex; ${\rm prox}_h(x)$ is cheap   | $O(1/k)$ |
-| Accelerated gradient desent    | $f(x)=g(x)+h(x)$   | $g$: convex, differentiable, L-smooth; $h$:convex; ${\rm prox}_h(x)$ is cheap | $O(1/k^2)$ |
+| Gradient descent  | $f(x)$   | $f$: convex, differentiable, L-smooth  | $O(1/k)$ |
+| Subgradient descent | $f(x)=g(x)+h(x)$ | $g$: convex, differentiable, L-smooth; $h$:convex  | $O(1/\sqrt{k})$ |
+| Generalized gradient descent | $f(x)=g(x)+h(x)$ | $g$: convex, differentiable, L-smooth; $h$:convex; ${\rm prox}_h(x)$ is cheap   | $O(1/k)$ |
+| Accelerated gradient descent   | $f(x)=g(x)+h(x)$   | $g$: convex, differentiable, L-smooth; $h$:convex; ${\rm prox}_h(x)$ is cheap | $O(1/k^2)$ |
 
 Table: A summary of first-order methods.
 
