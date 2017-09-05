@@ -1,5 +1,5 @@
 ---
-title: "A brief on first-order methods"
+title: "A Brief Note on First-order Methods"
 author: "Dong Li"
 date: "15 August 2017"
 output:
@@ -321,7 +321,7 @@ G_t(x)=\frac{x-{\rm prox}_h(x-t\nabla g(x))}{t}
 \end{aligned}$$
 
 ## Convergence analysis
-Assume $g$ has the same properties as in previous section, and $h$ is convex and ${\rm prox}_h$ is cheap to calculate, then we have
+Assume $g$ has the same properties as in the previous section, and $h$ is convex and ${\rm prox}_h$ is cheap to calculate, then we have
 
 **Lemma** The Lipschitz continuity of $\nabla g(x)$ leads to
 $$
@@ -473,7 +473,7 @@ f(x^{(k)})-f(x^*)\leq \dfrac{\theta_k^2}{2t}||x^{(0)}-x^*||^2 = \dfrac{2||x^{(0)
 Q.E.D.
 
 # Endnote
-This post is about the first-order methods, based on gradient descent. Compare these algorithms regarding assumption and covergence rate:
+This post is about the first-order methods and their convergence analysis. Compare these algorithms regarding assumption and covergence rate:
 
 |  Algorithm   | Function  | Condition | Convergence rate   |
 |-------------+--------------+------------------------+-----------|
