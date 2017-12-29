@@ -86,7 +86,7 @@ There are a few more new things appeared in DL in recent years, compared with ol
 |Hyperparameter tuning|Grid search|Random search|
 |Regularization| L1-norm, L2-norm| Dropout, batch norm|
 |Activation| Sigmoid, tanh|ReLU|
-|Initialization| All zeros, random|Xavier, reLU|
+|Initialization| All zeros, random|Xavier, ReLU|
 
 Table: A summary of differences between traditional ML and DL.
 
